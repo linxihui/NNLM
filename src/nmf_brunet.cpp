@@ -1,12 +1,11 @@
-#include <nnlm.hpp>
+#include "nnlm.hpp"
 
 //[[Rcpp::export]]
-Rcpp::List nmf_brunet(mat V, int k = 1, int max_iter = 500, double tol = 1e-5)
+RcppExport Rcpp::List nmf_brunet(mat V, int k = 1, int max_iter = 500, double tol = 1e-5)
 {
 	/* 
 	 * Description: 
 	 * 	An implment of Brunet's multiplicative updates based on KL divergence for non-negative matrix factorization.
-	 * 	This is more stable than the following one as it alternatingly updates each rank of W and H
 	 * Arguments:
 	 * 	V: a matrix to be decomposed, such that V ~ W*H
 	 * 	k: rank
@@ -64,7 +63,7 @@ Rcpp::List nmf_brunet(mat V, int k = 1, int max_iter = 500, double tol = 1e-5)
 
 
 //[[Rcpp::export]]
-mat get_H_brunet(mat V, mat W, int max_iter = 500, double tol = 1e-5)
+RcppExport mat get_H_brunet(mat V, mat W, int max_iter = 500, double tol = 1e-5)
 {
 	/*
 	 * Description:

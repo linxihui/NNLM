@@ -1,8 +1,8 @@
-#include <nnlm.hpp>
+#include "nnlm.hpp"
 
 
 //[[Rcpp::export]]
-Rcpp::List nmf_nnls(mat A, int k = 1, double eta = 0, double beta = 0, int max_iter = 500, double tol = 1e-5)
+RcppExport Rcpp::List nmf_nnls(mat A, int k = 1, double eta = 0, double beta = 0, int max_iter = 500, double tol = 1e-5)
 {
 	/*
 	 * Description:
@@ -74,6 +74,8 @@ Rcpp::List nmf_nnls(mat A, int k = 1, double eta = 0, double beta = 0, int max_i
 		Rcpp::Named("W") = W, 
 		Rcpp::Named("H") = H, 
 		Rcpp::Named("error") = sqrt(err),
-		Rcpp::Named("target_error") = sqrt(pen_err)
+		Rcpp::Named("target_error") = sqrt(pen_err),
+		Rcpp::Named("eta") = eta,
+		Rcpp::Named("beta") = beta
 		);
 }

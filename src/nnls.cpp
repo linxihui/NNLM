@@ -1,8 +1,8 @@
-#include <nnlm.hpp>
+#include "nnlm.hpp"
 
 
 //[[Rcpp::export]]
-mat nnls(mat A, mat b, int max_iter = 500, double tol = 1e-6)
+RcppExport mat nnls(mat A, mat b, int max_iter = 500, double tol = 1e-6)
 {
 	/*
 	 * Description: sequential Coordinate-wise algorithm for non-negative least square regression problem
