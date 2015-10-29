@@ -1,10 +1,11 @@
 Package: NNLM
 Type: Package
 Title: Non-Negative Linear Models, including a fast non-negative least square (NNLS) solver and some non-negative matrix factorization (NMF) algorithms
+Description: This is a package for Non-Negative Linear Models. It contains a fast non-negative least square (NNLS) solver using sequential coordinate descent algorithm and non-negative matrix factorization (NMF) algorithms.
 Version: 0.0.1
 Date: 2015-10-28
 Author: Eric Xihui Lin
 Maintainer: Eric Xihui Lin <xihuil.silence@gmail.com>
 Depends: R (>= 3.0.1)
-LinkedTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppArmadillo
 License: MIT
