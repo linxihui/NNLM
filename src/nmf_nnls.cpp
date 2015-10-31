@@ -1,8 +1,8 @@
-#include "nnlm.hpp"
+#include "nnlm.h"
 
 
 //[[Rcpp::export]]
-RcppExport Rcpp::List nmf_nnls(mat A, int k = 1, double eta = 0, double beta = 0, int max_iter = 500, double tol = 1e-5)
+RcppExport SEXP nmf_nnls(SEXP A_, SEXP k_, SEXP eta_, SEXP beta_, SEXP max_iter_, SEXP tol_)
 {
 	/*
 	 * Description:
@@ -27,6 +27,13 @@ RcppExport Rcpp::List nmf_nnls(mat A, int k = 1, double eta = 0, double beta = 0
 	 * Version:
 	 * 	2015-10-28
 	 */
+
+	mat A = Rcpp::as<mat>(A_);
+	int k = Rcpp::as<int>(k_);
+	int max_iter = Rcpp::as<int>(max_iter_);
+	double eta = Rcpp::as<double>(eta_), beta = Rcpp::as<double>(beta_);
+	double tol = Rcpp::as<double>(tol_);
+
 	mat W(A.n_rows, k, fill::randu);
 	mat H(k, A.n_cols);
 	W = normalise(W);  
@@ -38,27 +45,33 @@ RcppExport Rcpp::List nmf_nnls(mat A, int k = 1, double eta = 0, double beta = 0
 	vec pen_err(err);
 	if (eta < 0) eta = max(max(A));
 
+	// solve H given W
+	WtW = W.t()*W;
+	if (beta > 0) WtW += beta;
+	H = nnls_solver(WtW, -W.t()*A, max_iter, tol);
+
 	int i = 0;
 	for(; i < max_iter; i++)
 	{
-		// solve H given W
-		WtW = W.t()*W;
-		if (beta > 0) WtW += beta;
-		H = nnls_solver(WtW, -W.t()*A, 500*(1+i), tol/(1+i));
-
 		// solve W given H
 		HHt = H*H.t();
 		if (eta > 0) HHt.diag() += eta;
-		W = nnls_solver(HHt, -H*A.t(), 500*(1+i), tol/(1+i)).t();
+		W = nnls_solver(HHt, -H*A.t(), max_iter*(1+i), tol/(1+i)).t();
+
+		// solve H given W
+		WtW = W.t()*W;
+		if (beta > 0) WtW += beta;
+		H = nnls_solver(WtW, -W.t()*A, max_iter*(1+i), tol/(1+i));
 
 		pen_err[i] = mean(mean(square(A - W*H)));
-		err[i] = sqrt(pen_err[i]);
+		err[i] = std::sqrt(pen_err[i]);
 		if (beta > 0) pen_err[i] += mean(vectorise(square(mean(H)))) * k/A.n_cols;
 		if (eta > 0) pen_err[i] += eta * mean(mean(square(W)))*k*k / A.n_rows;
-		pen_err[i] = sqrt(pen_err[i]);
+		pen_err[i] = std::sqrt(pen_err[i]);
 
-	 	if (i > 0 && abs(pen_err[i-1] - pen_err[i]) < tol)
+		if (i > 0 && std::abs(pen_err[i-1] - pen_err[i]) < tol) {
 			break;
+			}
 	}
 
 	if (max_iter <= i)
@@ -73,8 +86,8 @@ RcppExport Rcpp::List nmf_nnls(mat A, int k = 1, double eta = 0, double beta = 0
 	return Rcpp::List::create(
 		Rcpp::Named("W") = W, 
 		Rcpp::Named("H") = H, 
-		Rcpp::Named("error") = sqrt(err),
-		Rcpp::Named("target_error") = sqrt(pen_err),
+		Rcpp::Named("error") = arma::sqrt(err),
+		Rcpp::Named("target_error") = arma::sqrt(pen_err),
 		Rcpp::Named("eta") = eta,
 		Rcpp::Named("beta") = beta
 		);
