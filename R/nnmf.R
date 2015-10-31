@@ -8,13 +8,14 @@
 #' using sequential coordinate descend methods. If \code{method = 'brunet'}, Decomposition is done using Brunet's
 #' multiplicative updates based on KL divergence. Note that penalties \code{eta}, \code{beta} are supported only when \code{method = 'nnls'}.
 #'
-#' @param x        A matrix to be decomposed
+#' @param A        A matrix to be decomposed
 #' @param k        An integer of decomposition rank
 #' @param method   Decomposition algorithms. Options are 'nnls'(default), 'brunet'
 #' @param eta      L2 penalty on the left (W). Default to no penalty. If eta < 0 then eta = max(A). Effective only when \code{method = 'nnls'}
 #' @param beta     L1 penalty on the right (H). Default to no penalty. Effective only when \code{method = 'nnls'}
 #' @param max.iter Maximum iteration of alternating NNLS solutions to H and W
 #' @param tol      Stop criterion, maximum difference of target_error between two successive iterations.
+#' @param check.k  If to check wheter k <= n*m/(n+m), where (n,m)=dim(A)
 #' @return A list of W, H and 
 #' 	\itemize{
 #' 		\item{error}{root mean square error between A and W*H}
@@ -29,17 +30,19 @@
 #'
 #' @export
 #'
-nnmf <- function(x, k = 1L, method = c('nnls', 'brunet'), eta = 0, beta = 0, max.iter = 500L, tol = 1e-6) {
+nnmf <- function(A, k = 1L, method = c('nnls', 'brunet'), eta = 0, beta = 0, max.iter = 500L, tol = 1e-6, check.k = TRUE) {
 	method = match.arg(method);
-	if (is.matrix(x)) x <- as.matrix(x);
-	if (is.double(x)) storage.mode(x) <- 'double';
+	if (!is.matrix(A)) x <- as.matrix(A);
+	if (!is.double(A)) storage.mode(A) <- 'double';
+	if (!all(A >= 0)) stop("Matrix must be non-negative.");
+	if (check.k && k > min(dim(A))) stop("k must not be larger than min(nrow(A), ncol(A))");
 	out <- switch(method,
-		'nnls' = .Call('nmf_nnls', x, as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), as.double(tol), PACKAGE = 'NNLM'),
-		'brunet' = .Call('nmf_brunet', x, as.integer(k), as.integer(max.iter), as.double(tol), PACKAGE = 'NNLM')
+		'nnls' = .Call('nmf_nnls', A, as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), as.double(tol), PACKAGE = 'NNLM'),
+		'brunet' = .Call('nmf_brunet', A, as.integer(k), as.integer(max.iter), as.double(tol), PACKAGE = 'NNLM')
 		);
 	# add row/col names back
-	if (!is.null(rownames(x))) rownames(out$W) <- rownames(x);
-	if (!is.null(colnames(x))) colnames(out$H) <- colnames(x);
+	if (!is.null(rownames(A))) rownames(out$W) <- rownames(A);
+	if (!is.null(colnames(A))) colnames(out$H) <- colnames(A);
 
 	out$iteration <- length(out$error);
 	out$method <- method;
@@ -47,14 +50,17 @@ nnmf <- function(x, k = 1L, method = c('nnls', 'brunet'), eta = 0, beta = 0, max
 	if ('brunet' == method) out$target_error <- out$error;
 	out$target_error <- as.vector(out$target_error);
 	out$error <- as.vector(out$error);
+
 	return(structure(out, class = 'NNMF'));
 	}
 
 
-#' @title Calculate W or H matrix from a NNMF object given new matrix and pre-computed H or W
+#' Calculate W or H matrix from a NNMF object given new matrix and pre-computed H or W
+#'
 #' @param object       An NNMF object returned by \code{\link{nnmf}}
 #' @param newdata      A new matrix of x
 #' @param which.matrix Either 'W' or 'H'
+#' @param method       Either 'nnls' or 'brunet'. Default to \code{object$method}
 #' @param max.iter     Maximum number of iterations
 #' @param tol          Stop criterion, maximum difference of target_error between two successive iterations
 #' @param ...          Unsued, just for compatiblity
@@ -69,14 +75,17 @@ nnmf <- function(x, k = 1L, method = c('nnls', 'brunet'), eta = 0, beta = 0, max
 #' @seealso \code{\link{nnmf}}
 #' @export
 #'
-predict.NNMF <- function(object, newdata, which.matrix = c('H', 'W'), max.iter = 500L, tol = object$tol, ...) {
+predict.NNMF <- function(object, newdata, which.matrix = c('H', 'W'), method = object$method, max.iter = 500L, tol = .Machine$double.eps, ...) {
 	which.matrix <- match.arg(which.matrix);
-	if (is.matrix(newdata)) newdata <- as.matrix(newdata);
-	if (is.double(newdata)) storage.mode(newdata) <- 'double';
+	if (!is.matrix(newdata)) newdata <- as.matrix(newdata);
+	if (!is.double(newdata)) storage.mode(newdata) <- 'double';
+	if (!all(newdata >= 0)) stop("newdata must be non-negative");
 	tol <- as.double(tol);
 	max.iter <- as.integer(max.iter);
-	
-	out <- switch(object$method,
+
+	method <- match.arg(method, c('nnls', 'brunet'));
+
+	out <- switch(method,
 		'nnls' = {
 			out <- switch(which.matrix,
 				'H' = nnls(object$W, newdata, max.iter, tol),
@@ -85,10 +94,12 @@ predict.NNMF <- function(object, newdata, which.matrix = c('H', 'W'), max.iter =
 		'brunet' = {
 			switch(which.matrix,
 				'H' = .Call('get_H_brunet', newdata, object$W, max.iter, tol, PACKAGE = 'NNLM'),
-				'W' = t(.Call('get_H_brunet', t(object$H), t(newdata), max.iter, tol, PACKAGE = 'NNLM')))
+				'W' = t(.Call('get_H_brunet', t(newdata), t(object$H), max.iter, tol, PACKAGE = 'NNLM')))
 			}
 		);
+
 	if ('H' == which.matrix) colnames(out) <- colnames(newdata);
 	if ('W' == which.matrix) rownames(out) <- rownames(newdata);
+
 	return(out);
-	}
+}
