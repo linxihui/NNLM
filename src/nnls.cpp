@@ -1,8 +1,16 @@
-#include "nnlm.hpp"
+#include "nnlm.h"
+
+/*
+#include <bits/stdc++.h>
+#include <RcppArmadillo.h>
+
+using namespace std;
+using namespace arma;
+*/
 
 
 //[[Rcpp::export]]
-RcppExport mat nnls(mat A, mat b, int max_iter = 500, double tol = 1e-6)
+RcppExport SEXP c_nnls(SEXP A_, SEXP b_, SEXP max_iter_, SEXP tol_)
 {
 	/*
 	 * Description: sequential Coordinate-wise algorithm for non-negative least square regression problem
@@ -21,10 +29,13 @@ RcppExport mat nnls(mat A, mat b, int max_iter = 500, double tol = 1e-6)
 	 * 	2015-10-28
 	 */
 
-	if(A.n_rows != b.n_rows)
-		throw std::invalid_argument("A and b must have the same number of rows.");
-	
-	return nnls_solver(A.t()*A, -A.t()*b, max_iter, tol);
+	mat A = Rcpp::as<mat>(A_);
+	mat b = Rcpp::as<mat>(b_);
+	int max_iter = Rcpp::as<int>(max_iter_);
+	int tol = Rcpp::as<double>(tol_);
+
+	mat out = nnls_solver(A.t()*A, -A.t()*b, max_iter, tol);
+	return Rcpp::wrap(out);
 }
 
 
@@ -56,7 +67,7 @@ mat nnls_solver(mat H, mat mu, int max_iter = 500, double tol = 1e-6)
 	{
 		x0.fill(-9999);
 		int i = 0;
-		while(i < max_iter && max(abs(x.col(j) - x0)) > tol) 
+		while(i < max_iter && arma::max(arma::abs(x.col(j) - x0)) > tol)
 		{
 			x0 = x.col(j);
 			for (int k = 0; k < H.n_cols; k++) 
