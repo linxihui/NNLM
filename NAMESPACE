@@ -3,7 +3,5 @@
 S3method(predict,NNMF)
 export(nnls)
 export(nnmf)
-export(predict.NNMF)
 import(Rcpp)
-importFrom(stats,predict)
 useDynLib(NNLM)
