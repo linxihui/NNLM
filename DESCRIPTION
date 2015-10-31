@@ -6,7 +6,7 @@ Version: 0.0.1
 Date: 2015-10-28
 Authors@R: person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre"))
 Depends: R (>= 3.0.1)
-Imports: Rcpp (>= 0.11.0), stats
+Imports: Rcpp (>= 0.11.0)
 LinkingTo: Rcpp, RcppArmadillo
 License: BSD_2_clause + file LICENSE
 LazyData: yes
