@@ -57,7 +57,7 @@ RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_)
 	if (max_iter <= i)
 	{
 		Rcpp::Function warning("warning");
-		warning("Algorithm does not converge.");
+		warning("Target tolerence not reached. Try a larger max.iter.");
 	}
 
 	return Rcpp::wrap(Rcpp::List::create(
@@ -84,8 +84,8 @@ RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_)
 	int k = W.n_cols;
 	mat H = randu(k, V.n_cols);
 	mat Vbar = W*H;
-	rowvec w = sum(W);
-	colvec h, ha;
+	rowvec w = sum(W), ha;
+	colvec h;
 	vec err(max_iter);
 	err.fill(-1);
 
@@ -110,51 +110,8 @@ RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_)
 	if (max_iter <= i)
 	{
 		Rcpp::Function warning("warning");
-		warning("Algorithm does not converge.");
+		warning("Target tolerence not reached. Try a larger max.iter.");
 	}
 
 	return Rcpp::wrap(H);
 }
-
-
-/*
-/[[Rcpp::export]]
-mat get_W_brunet(mat V, mat H, int max_iter = 500, double tol = 1e-5)
-{
-	// Description: Get profile matrix W given V and H, where V ~ W*H
-
-	int k = H.n_rows;
-	mat W = randu(V.n_rows, k);
-	mat Vbar = W*H;
-	colvec h = sum(h, 1);
-	rowvec w, wa;
-	vec err(max_iter);
-	err.fill(-1);
-
-	int i = 0;
-	for(; i < max_iter; i++)
-	{
-		w = sum(W);
-		for (int a = 0; a < k; a++)
-		{
-			wa = W.col(a);
-			W.col(a) %= (V / Vbar) * H.row(a).t() / h.at(a);
-			Vbar += (W.col(a) - wa) * H.row(a);
-		}
-		err.at(i) =  std::sqrt(mean(mean(square(V - Vbar), 1)));
-		if (i > 0 && std::abs(err.at(i) - err.at(i-1)) < tol)
-		{
-			err.resize(i+1);
-			break;
-		}
-	}
-
-	if (max_iter <= i)
-	{
-		Rcpp::Function warning("warning");
-		warning("Algorithm does not converge.");
-	}
-
-	return W;
-}
-*/

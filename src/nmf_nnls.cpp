@@ -77,7 +77,7 @@ RcppExport SEXP nmf_nnls(SEXP A_, SEXP k_, SEXP eta_, SEXP beta_, SEXP max_iter_
 	if (max_iter <= i)
 	{
 		Rcpp::Function warning("warning");
-		warning("Algorithm does not converge.");
+		warning("Target tolerence not reached. Try a larger max.iter.");
 	}
 
 	err.resize(i < max_iter ? i+1 : max_iter);
