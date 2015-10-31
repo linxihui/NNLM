@@ -4,8 +4,12 @@ Title: Non-Negative Linear Models, including a fast non-negative least square (N
 Description: This is a package for Non-Negative Linear Models. It contains a fast non-negative least square (NNLS) solver using sequential coordinate descent algorithm and non-negative matrix factorization (NMF) algorithms.
 Version: 0.0.1
 Date: 2015-10-28
-Author: Eric Xihui Lin
-Maintainer: Eric Xihui Lin <xihuil.silence@gmail.com>
+Authors@R: person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre"))
 Depends: R (>= 3.0.1)
+Imports: Rcpp (>= 0.11.0), stats
 LinkingTo: Rcpp, RcppArmadillo
-License: MIT
+License: BSD_2_clause + file LICENSE
+LazyData: yes
+LazyLoad: yes
+NeedsCompilation: yes
+Suggests: testthat
