@@ -1,7 +1,7 @@
-#include "nnlm.hpp"
+#include "nnlm.h"
 
 //[[Rcpp::export]]
-RcppExport Rcpp::List nmf_brunet(mat V, int k = 1, int max_iter = 500, double tol = 1e-5)
+RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_)
 {
 	/* 
 	 * Description: 
@@ -19,6 +19,11 @@ RcppExport Rcpp::List nmf_brunet(mat V, int k = 1, int max_iter = 500, double to
 	 * 	2015-10-28
 	 */
 
+	mat V = Rcpp::as<mat>(V_);
+	int k = Rcpp::as<int>(k_);
+	int max_iter = Rcpp::as<int>(max_iter_);
+	double tol = Rcpp::as<double>(tol_);
+
 	mat W = randu(V.n_rows, k), H = randu(k, V.n_cols);
 	mat Vbar = W*H; // current W*H
 	rowvec w, ha; // W/h  = col/row sum of W/H
@@ -33,15 +38,16 @@ RcppExport Rcpp::List nmf_brunet(mat V, int k = 1, int max_iter = 500, double to
 		h = sum(H, 1);
 		for (int a = 0; a < k; a++)
 		{
-			ha = H.row(a);
-			H.row(a) %= W.col(a).t() * (V / Vbar) / w.at(a);
-			Vbar += W.col(a) * (H.row(a) - ha);
 			wa = W.col(a);
 			W.col(a) %= (V / Vbar) * H.row(a).t() / h.at(a);
 			Vbar += (W.col(a) - wa) * H.row(a);
+
+			ha = H.row(a);
+			H.row(a) %= W.col(a).t() * (V / Vbar) / w.at(a);
+			Vbar += W.col(a) * (H.row(a) - ha);
 		}
-		err.at(i) =  sqrt(mean(mean(square(V - Vbar), 1)));
-		if (i > 0 && abs(err.at(i) - err.at(i-1)) < tol)
+		err.at(i) =  std::sqrt(mean(mean(square(V - Vbar), 1)));
+		if (i > 0 && std::abs(err.at(i) - err.at(i-1)) < tol)
 		{
 			err.resize(i);
 			break;
@@ -54,21 +60,26 @@ RcppExport Rcpp::List nmf_brunet(mat V, int k = 1, int max_iter = 500, double to
 		warning("Algorithm does not converge.");
 	}
 
-	return Rcpp::List::create(
+	return Rcpp::wrap(Rcpp::List::create(
 		Rcpp::Named("W") = W,
 		Rcpp::Named("H") = H,
 		Rcpp::Named("error") = err
-		);
+		));
 }
 
 
 //[[Rcpp::export]]
-RcppExport mat get_H_brunet(mat V, mat W, int max_iter = 500, double tol = 1e-5)
+RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_)
 {
 	/*
 	 * Description:
 	 * 	Get coefficient matrix H given V and W, where V ~ W*H
 	 */
+
+	mat V = Rcpp::as<mat>(V_);
+	mat W = Rcpp::as<mat>(W_);
+	int max_iter = Rcpp::as<int>(max_iter_);
+	double tol = Rcpp::as<double>(tol_);
 
 	int k = W.n_cols;
 	mat H = randu(k, V.n_cols);
@@ -88,8 +99,8 @@ RcppExport mat get_H_brunet(mat V, mat W, int max_iter = 500, double tol = 1e-5)
 			H.row(a) %= W.col(a).t() * (V / Vbar) / w.at(a);
 			Vbar += W.col(a) * (H.row(a) - ha);
 		}
-		err.at(i) =  sqrt(mean(mean(square(V - Vbar), 1)));
-		if (i > 0 && abs(err.at(i) - err.at(i-1)) < tol)
+		err.at(i) =  std::sqrt(mean(mean(square(V - Vbar), 1)));
+		if (i > 0 && std::abs(err.at(i) - err.at(i-1)) < tol)
 		{
 			err.resize(i);
 			break;
@@ -102,7 +113,7 @@ RcppExport mat get_H_brunet(mat V, mat W, int max_iter = 500, double tol = 1e-5)
 		warning("Algorithm does not converge.");
 	}
 
-	return H;
+	return Rcpp::wrap(H);
 }
 
 
@@ -130,8 +141,8 @@ mat get_W_brunet(mat V, mat H, int max_iter = 500, double tol = 1e-5)
 			W.col(a) %= (V / Vbar) * H.row(a).t() / h.at(a);
 			Vbar += (W.col(a) - wa) * H.row(a);
 		}
-		err.at(i) =  sqrt(mean(mean(square(V - Vbar), 1)));
-		if (i > 0 && abs(err.at(i) - err.at(i-1)) < tol)
+		err.at(i) =  std::sqrt(mean(mean(square(V - Vbar), 1)));
+		if (i > 0 && std::abs(err.at(i) - err.at(i-1)) < tol)
 		{
 			err.resize(i+1);
 			break;
