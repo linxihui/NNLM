@@ -1,12 +1,14 @@
 #' Non-negative least square
 #'
-#' Sequential Coordinate-wise algorithm for non-negative least square regression problem
+#' Sequential coordinate-wise algorithm for non-negative least square regression
 #'
-#' @param x        Design mamtrix
-#' @param y        Vector or matrix of response
-#' @param check.x  If to check the condition number of matrix x to ensure unique solution
-#' @param max.iter Maximum number of iterations
-#' @param tol      Stop criterion, minimum change on x between two successive iteration
+#' @param x             Design mamtrix
+#' @param y             Vector or matrix of response
+#' @param check.x       If to check the condition number of matrix x to ensure unique solution
+#' @param max.iter      Maximum number of iterations
+#' @param tol           Stop criterion, minimum change on x between two successive iteration
+#' @param n.threads     An integer number of threads/CPUs to use. Default to 0, which depends on OPENMP (usually all cores)
+#' @param show.progress TRUE/FALSE indicating if to show a progress bar
 #' @return A vector of non-negative coefficients, a solution to 
 #' 	argmin_{beta} ||y - x*beta||_F^2, s.t. beta >= 0
 #' @references
@@ -23,7 +25,7 @@
 #'
 #' @export
 #'
-nnls <- function(x, y, check.x = TRUE, max.iter = 10000L, tol = .Machine$double.eps) {
+nnls <- function(x, y, check.x = TRUE, max.iter = 10000L, tol = .Machine$double.eps, n.threads = 0L, show.progress = TRUE) {
 	if (!is.matrix(x)) x <- as.matrix(x);
 	if (!is.double(x)) storage.mode(x) <- 'double';
 	if (!is.matrix(y)) y <- as.matrix(y);
@@ -34,12 +36,14 @@ nnls <- function(x, y, check.x = TRUE, max.iter = 10000L, tol = .Machine$double.
 	if (anyNA(x)) stop("x contains missing values.");
 	if (anyNA(y)) stop("y contains missing values.");
 
+	if (n.threads < 0L) n.threads <- 0L;
+
 	if (check.x) {
 		if (nrow(x) < ncol(x) || rcond(x) < .Machine$double.eps)
 			warning("x does not have a full column rank. Solution may not be unique.");
 		}
 
-	beta <- .Call('c_nnls', x, y, as.integer(max.iter), as.double(tol), PACKAGE = 'NNLM');
+	beta <- .Call('c_nnls', x, y, as.integer(max.iter), as.double(tol), as.integer(n.threads), as.logical(show.progress), PACKAGE = 'NNLM');
 
 	dimnames(beta) <- list(colnames(x), colnames(y));
 	if (1 == ncol(beta)) beta <- beta[, 1];

@@ -8,14 +8,16 @@
 #' using sequential coordinate descend methods. If \code{method = 'brunet'}, Decomposition is done using Brunet's
 #' multiplicative updates based on KL divergence. Note that penalties \code{eta}, \code{beta} are supported only when \code{method = 'nnls'}.
 #'
-#' @param A        A matrix to be decomposed
-#' @param k        An integer of decomposition rank
-#' @param method   Decomposition algorithms. Options are 'nnls'(default), 'brunet'
-#' @param eta      L2 penalty on the left (W). Default to no penalty. If eta < 0 then eta = max(A). Effective only when \code{method = 'nnls'}
-#' @param beta     L1 penalty on the right (H). Default to no penalty. Effective only when \code{method = 'nnls'}
-#' @param max.iter Maximum iteration of alternating NNLS solutions to H and W
-#' @param tol      Stop criterion, maximum difference of target_error between two successive iterations.
-#' @param check.k  If to check wheter k <= n*m/(n+m), where (n,m)=dim(A)
+#' @param A             A matrix to be decomposed
+#' @param k             An integer of decomposition rank
+#' @param method        Decomposition algorithms. Options are 'nnls'(default), 'brunet'
+#' @param eta           L2 penalty on the left (W). Default to no penalty. If eta < 0 then eta = max(A). Effective only when \code{method = 'nnls'}
+#' @param beta          L1 penalty on the right (H). Default to no penalty. Effective only when \code{method = 'nnls'}
+#' @param max.iter      Maximum iteration of alternating NNLS solutions to H and W
+#' @param tol           Stop criterion, maximum difference of target_error between two successive iterations.
+#' @param check.k       If to check wheter k <= n*m/(n+m), where (n,m)=dim(A)
+#' @param n.threads     An integer number of threads/CPUs to use. Default to 0, which depends on OPENMP (usually all cores)
+#' @param show.progress TRUE/FALSE indicating if to show a progress bar
 #' @return A list of W, H and 
 #' 	\itemize{
 #' 		\item{error}{root mean square error between A and W*H}
@@ -30,15 +32,30 @@
 #'
 #' @export
 #'
-nnmf <- function(A, k = 1L, method = c('nnls', 'brunet'), eta = 0, beta = 0, max.iter = 500L, tol = 1e-6, check.k = TRUE) {
+nnmf <- function(
+	A, k = 1L, method = c('nnls', 'brunet'), eta = 0, beta = 0, max.iter = 500L, 
+	tol = 1e-6, check.k = TRUE, n.threads = 0L, show.progress = TRUE
+	) {
 	method = match.arg(method);
 	if (!is.matrix(A)) x <- as.matrix(A);
 	if (!is.double(A)) storage.mode(A) <- 'double';
 	if (!all(A >= 0)) stop("Matrix must be non-negative.");
-	if (check.k && k > min(dim(A))) stop("k must not be larger than min(nrow(A), ncol(A))");
+	if (check.k && k > min(dim(A))) 
+		stop("k must not be larger than min(nrow(A), ncol(A))");
+
+	if (n.threads < 0L) n.threads <- 0L;
+
 	out <- switch(method,
-		'nnls' = .Call('nmf_nnls', A, as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), as.double(tol), PACKAGE = 'NNLM'),
-		'brunet' = .Call('nmf_brunet', A, as.integer(k), as.integer(max.iter), as.double(tol), PACKAGE = 'NNLM')
+		'nnls' = .Call('nmf_nnls', 
+			A, as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
+			as.double(tol), as.integer(n.threads), as.logical(show.progress),
+			PACKAGE = 'NNLM'
+			),
+		'brunet' = .Call('nmf_brunet', 
+			A, as.integer(k), as.integer(max.iter), as.double(tol), 
+			as.integer(n.threads), as.logical(show.progress), 
+			PACKAGE = 'NNLM'
+			)
 		);
 	# add row/col names back
 	if (!is.null(rownames(A))) rownames(out$W) <- rownames(A);
@@ -57,13 +74,15 @@ nnmf <- function(A, k = 1L, method = c('nnls', 'brunet'), eta = 0, beta = 0, max
 
 #' Calculate W or H matrix from a NNMF object given new matrix and pre-computed H or W
 #'
-#' @param object       An NNMF object returned by \code{\link{nnmf}}
-#' @param newdata      A new matrix of x
-#' @param which.matrix Either 'W' or 'H'
-#' @param method       Either 'nnls' or 'brunet'. Default to \code{object$method}
-#' @param max.iter     Maximum number of iterations
-#' @param tol          Stop criterion, maximum difference of target_error between two successive iterations
-#' @param ...          Unsued, just for compatiblity
+#' @param object        An NNMF object returned by \code{\link{nnmf}}
+#' @param newdata       A new matrix of x
+#' @param which.matrix  Either 'W' or 'H'
+#' @param method        Either 'nnls' or 'brunet'. Default to \code{object$method}
+#' @param max.iter      Maximum number of iterations
+#' @param tol           Stop criterion, maximum difference of target_error between two successive iterations
+#' @param n.threads     An integer number of threads/CPUs to use. Default to 0, which depends on OPENMP (usually all cores)
+#' @param show.progress TRUE/FALSE indicating if to show a progress bar
+#' @param ...           Unsued, just for compatiblity
 #' @return \code{W} or \code{H} for newdata given pre-computed H or W
 #' @examples
 #'
@@ -75,7 +94,10 @@ nnmf <- function(A, k = 1L, method = c('nnls', 'brunet'), eta = 0, beta = 0, max
 #' @seealso \code{\link{nnmf}}
 #' @export
 #'
-predict.NNMF <- function(object, newdata, which.matrix = c('H', 'W'), method = object$method, max.iter = 500L, tol = .Machine$double.eps, ...) {
+predict.NNMF <- function(
+	object, newdata, which.matrix = c('H', 'W'), method = object$method, 
+	max.iter = 500L, tol = .Machine$double.eps, n.threads = 0L, show.progress = TRUE,
+	...) {
 	which.matrix <- match.arg(which.matrix);
 	if (!is.matrix(newdata)) newdata <- as.matrix(newdata);
 	if (!is.double(newdata)) storage.mode(newdata) <- 'double';
@@ -88,13 +110,19 @@ predict.NNMF <- function(object, newdata, which.matrix = c('H', 'W'), method = o
 	out <- switch(method,
 		'nnls' = {
 			out <- switch(which.matrix,
-				'H' = nnls(object$W, newdata, max.iter, tol),
-				'W' = t(nnls(t(object$H), t(newdata), max.iter, tol)))
+				'H' = nnls(object$W, newdata, max.iter, tol, n.threads, show.progress),
+				'W' = t(nnls(t(object$H), t(newdata), max.iter, tol, n.threads, show.progress)))
 			},
 		'brunet' = {
 			switch(which.matrix,
-				'H' = .Call('get_H_brunet', newdata, object$W, max.iter, tol, PACKAGE = 'NNLM'),
-				'W' = t(.Call('get_H_brunet', t(newdata), t(object$H), max.iter, tol, PACKAGE = 'NNLM')))
+				'H' = .Call('get_H_brunet', 
+					newdata, object$W, max.iter, tol, n.threads, show.progress, 
+					PACKAGE = 'NNLM'
+					),
+				'W' = t(.Call( 'get_H_brunet', 
+					t(newdata), t(object$H), max.iter, tol, n.threads, show.progress, 
+					PACKAGE = 'NNLM')
+					))
 			}
 		);
 

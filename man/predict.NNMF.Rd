@@ -5,7 +5,8 @@
 \title{Calculate W or H matrix from a NNMF object given new matrix and pre-computed H or W}
 \usage{
 \method{predict}{NNMF}(object, newdata, which.matrix = c("H", "W"),
-  method = object$method, max.iter = 500L, tol = .Machine$double.eps, ...)
+  method = object$method, max.iter = 500L, tol = .Machine$double.eps,
+  n.threads = 0L, show.progress = TRUE, ...)
 }
 \arguments{
 \item{object}{An NNMF object returned by \code{\link{nnmf}}}
@@ -19,6 +20,10 @@
 \item{max.iter}{Maximum number of iterations}
 
 \item{tol}{Stop criterion, maximum difference of target_error between two successive iterations}
+
+\item{n.threads}{An integer number of threads/CPUs to use. Default to 0, which depends on OPENMP (usually all cores)}
+
+\item{show.progress}{TRUE/FALSE indicating if to show a progress bar}
 
 \item{...}{Unsued, just for compatiblity}
 }

@@ -5,7 +5,8 @@
 \title{Non-negative matrix factorization}
 \usage{
 nnmf(A, k = 1L, method = c("nnls", "brunet"), eta = 0, beta = 0,
-  max.iter = 500L, tol = 1e-06, check.k = TRUE)
+  max.iter = 500L, tol = 1e-06, check.k = TRUE, n.threads = 0L,
+  show.progress = TRUE)
 }
 \arguments{
 \item{A}{A matrix to be decomposed}
@@ -23,6 +24,10 @@ nnmf(A, k = 1L, method = c("nnls", "brunet"), eta = 0, beta = 0,
 \item{tol}{Stop criterion, maximum difference of target_error between two successive iterations.}
 
 \item{check.k}{If to check wheter k <= n*m/(n+m), where (n,m)=dim(A)}
+
+\item{n.threads}{An integer number of threads/CPUs to use. Default to 0, which depends on OPENMP (usually all cores)}
+
+\item{show.progress}{TRUE/FALSE indicating if to show a progress bar}
 }
 \value{
 A list of W, H and

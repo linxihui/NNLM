@@ -1,7 +1,8 @@
 #include "nnlm.h"
 
+
 //[[Rcpp::export]]
-RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_)
+RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_, SEXP n_threads_, SEXP show_progress_)
 {
 	/* 
 	 * Description: 
@@ -16,13 +17,15 @@ RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_)
 	 * Author:
 	 * 	Eric Xihui Lin <xihuil.silence@gmail.com>
 	 * Version:
-	 * 	2015-10-28
+	 * 	2015-10-31
 	 */
 
 	mat V = Rcpp::as<mat>(V_);
 	int k = Rcpp::as<int>(k_);
 	int max_iter = Rcpp::as<int>(max_iter_);
 	double tol = Rcpp::as<double>(tol_);
+	int n_threads = Rcpp::as<int>(n_threads_);
+	bool show_progress = Rcpp::as<int>(show_progress_);
 
 	mat W = randu(V.n_rows, k), H = randu(k, V.n_cols);
 	mat Vbar = W*H; // current W*H
@@ -31,9 +34,17 @@ RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_)
 	vec err(max_iter);
 	err.fill(-1);
 
+	// check progression
+	Progress prgrss(max_iter, show_progress);
+
 	int i = 0;
 	for(; i < max_iter; i++) 
 	{
+		if (Progress::check_abort()) 
+			return R_NilValue;
+
+		prgrss.increment();
+
 		w = sum(W);
 		h = sum(H, 1);
 		for (int a = 0; a < k; a++)
@@ -69,7 +80,7 @@ RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_)
 
 
 //[[Rcpp::export]]
-RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_)
+RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_, SEXP n_threads_, SEXP show_progress_)
 {
 	/*
 	 * Description:
@@ -80,6 +91,8 @@ RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_)
 	mat W = Rcpp::as<mat>(W_);
 	int max_iter = Rcpp::as<int>(max_iter_);
 	double tol = Rcpp::as<double>(tol_);
+	int n_threads = Rcpp::as<int>(n_threads_);
+	bool show_progress = Rcpp::as<int>(show_progress_);
 
 	int k = W.n_cols;
 	mat H = randu(k, V.n_cols);
@@ -89,9 +102,17 @@ RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_)
 	vec err(max_iter);
 	err.fill(-1);
 
+	// check progression
+	Progress prgrss(max_iter, show_progress);
+
 	int i = 0;
 	for(; i < max_iter; i++)
 	{
+		if (Progress::check_abort()) 
+			return R_NilValue;
+
+		prgrss.increment();
+
 		h = sum(H, 1);
 		for (int a = 0; a < k; a++)
 		{

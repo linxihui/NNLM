@@ -4,7 +4,8 @@
 \alias{nnls}
 \title{Non-negative least square}
 \usage{
-nnls(x, y, check.x = TRUE, max.iter = 10000L, tol = .Machine$double.eps)
+nnls(x, y, check.x = TRUE, max.iter = 10000L, tol = .Machine$double.eps,
+  n.threads = 0L, show.progress = TRUE)
 }
 \arguments{
 \item{x}{Design mamtrix}
@@ -16,13 +17,17 @@ nnls(x, y, check.x = TRUE, max.iter = 10000L, tol = .Machine$double.eps)
 \item{max.iter}{Maximum number of iterations}
 
 \item{tol}{Stop criterion, minimum change on x between two successive iteration}
+
+\item{n.threads}{An integer number of threads/CPUs to use. Default to 0, which depends on OPENMP (usually all cores)}
+
+\item{show.progress}{TRUE/FALSE indicating if to show a progress bar}
 }
 \value{
 A vector of non-negative coefficients, a solution to
 	argmin_{beta} ||y - x*beta||_F^2, s.t. beta >= 0
 }
 \description{
-Sequential Coordinate-wise algorithm for non-negative least square regression problem
+Sequential coordinate-wise algorithm for non-negative least square regression
 }
 \examples{
 x <- 10*matrix(runif(50*20), 50, 20)-1
