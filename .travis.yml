@@ -1,0 +1,38 @@
+# Sample .travis.yml for R projects
+
+language: r
+warnings_are_errors: true
+sudo: required
+
+env:
+  global:
+    - R_BUILD_ARGS="--no-build-vignettes --no-manual"
+    - R_CHECK_ARGS="--no-build-vignettes --no-manual --as-cran"
+
+script: 
+  - ./travis-tool.sh run_tests
+
+before_install:
+  - curl -OL http://raw.github.com/craigcitro/r-travis/master/scripts/travis-tool.sh
+  - chmod 755 ./travis-tool.sh
+  - ./travis-tool.sh bootstrap
+
+install:
+  - ./travis-tool.sh install_aptget r-cran-runit
+  - ./travis-tool.sh install_r Rcpp RcppArmadillo RcppProgress testthat
+
+r_github_packages:
+  - jimhester/covr
+
+after_success:
+  - Rscript -e 'covr::codecov()'
+
+after_failure:
+  - ./travis-tool.sh dump_logs
+
+notifications:
+  email:
+    recipients:
+      - xihuil.silence@gmail.com
+    on_success: change
+    on_failure: always
