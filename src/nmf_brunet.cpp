@@ -2,7 +2,7 @@
 
 
 //[[Rcpp::export]]
-RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_, SEXP n_threads_, SEXP show_progress_)
+Rcpp::List nmf_brunet(const mat & A, int k, int max_iter , double tol, int n_threads, bool show_progress)
 {
 	/* 
 	 * Description: 
@@ -20,19 +20,13 @@ RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_, SEXP n
 	 * 	2015-10-31
 	 */
 
-	mat V = Rcpp::as<mat>(V_);
-	int k = Rcpp::as<int>(k_);
-	int max_iter = Rcpp::as<int>(max_iter_);
-	double tol = Rcpp::as<double>(tol_);
-	int n_threads = Rcpp::as<int>(n_threads_);
-	bool show_progress = Rcpp::as<int>(show_progress_);
 
-	mat W = randu(V.n_rows, k), H = randu(k, V.n_cols);
-	mat Vbar = W*H; // current W*H
+	mat W = randu(A.n_rows, k), H = randu(k, A.n_cols);
+	mat Abar = W*H; // current W*H
 	rowvec w, ha; // W/h  = col/row sum of W/H
-	colvec h, wa; // ha/wa = previous H.row/W.col for fast update of Vbar
-	vec err(max_iter);
-	err.fill(-1);
+	colvec h, wa; // ha/wa = previous H.row/W.col for fast update of Abar
+	vec err(max_iter), trgt_err(max_iter);
+	trgt_err.fill(-1);
 
 	// check progression
 	Progress prgrss(max_iter, show_progress);
@@ -40,8 +34,7 @@ RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_, SEXP n
 	int i = 0;
 	for(; i < max_iter; i++) 
 	{
-		if (Progress::check_abort()) 
-			return R_NilValue;
+		Rcpp::checkUserInterrupt();
 
 		prgrss.increment();
 
@@ -50,53 +43,48 @@ RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_ , SEXP max_iter_ , SEXP tol_, SEXP n
 		for (int a = 0; a < k; a++)
 		{
 			wa = W.col(a);
-			W.col(a) %= (V / Vbar) * H.row(a).t() / h.at(a);
-			Vbar += (W.col(a) - wa) * H.row(a);
+			W.col(a) %= (A / Abar) * H.row(a).t() / h.at(a);
+			Abar += (W.col(a) - wa) * H.row(a);
 
 			ha = H.row(a);
-			H.row(a) %= W.col(a).t() * (V / Vbar) / w.at(a);
-			Vbar += W.col(a) * (H.row(a) - ha);
+			H.row(a) %= W.col(a).t() * (A / Abar) / w.at(a);
+			Abar += W.col(a) * (H.row(a) - ha);
 		}
-		err.at(i) =  std::sqrt(mean(mean(square(V - Vbar), 1)));
-		if (i > 0 && std::abs(err.at(i) - err.at(i-1)) < tol)
+		err.at(i) =  std::sqrt(mean(mean(square(A - Abar))));
+		trgt_err.at(i) = mean(mean(A % (arma::trunc_log(A) - arma::trunc_log(Abar)) - A - Abar));
+		if (i > 0 && std::abs(trgt_err.at(i) - trgt_err.at(i-1)) < tol)
 		{
 			err.resize(i);
+			trgt_err.resize(i);
 			break;
 		}
 	}
 
 	if (max_iter <= i)
 	{
-		Rcpp::Function warning("warning");
-		warning("Target tolerence not reached. Try a larger max.iter.");
+		Rcpp::warning("Target tolerence not reached. Try a larger max.iter.");
 	}
 
-	return Rcpp::wrap(Rcpp::List::create(
+	return Rcpp::List::create(
 		Rcpp::Named("W") = W,
 		Rcpp::Named("H") = H,
-		Rcpp::Named("error") = err
-		));
+		Rcpp::Named("error") = err,
+		Rcpp::Named("target_error") = trgt_err
+		);
 }
 
 
 //[[Rcpp::export]]
-RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_, SEXP n_threads_, SEXP show_progress_)
+mat get_H_brunet(const mat & A, const mat & W,  int max_iter, double tol, int n_threads, bool show_progress)
 {
 	/*
 	 * Description:
-	 * 	Get coefficient matrix H given V and W, where V ~ W*H
+	 * 	Get coefficient matrix H given A and W, where A ~ W*H
 	 */
 
-	mat V = Rcpp::as<mat>(V_);
-	mat W = Rcpp::as<mat>(W_);
-	int max_iter = Rcpp::as<int>(max_iter_);
-	double tol = Rcpp::as<double>(tol_);
-	int n_threads = Rcpp::as<int>(n_threads_);
-	bool show_progress = Rcpp::as<int>(show_progress_);
-
 	int k = W.n_cols;
-	mat H = randu(k, V.n_cols);
-	mat Vbar = W*H;
+	mat H = randu(k, A.n_cols);
+	mat Abar = W*H;
 	rowvec w = sum(W), ha;
 	colvec h;
 	vec err(max_iter);
@@ -108,8 +96,7 @@ RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_, SEXP n
 	int i = 0;
 	for(; i < max_iter; i++)
 	{
-		if (Progress::check_abort()) 
-			return R_NilValue;
+		Rcpp::checkUserInterrupt();
 
 		prgrss.increment();
 
@@ -117,10 +104,10 @@ RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_, SEXP n
 		for (int a = 0; a < k; a++)
 		{
 			ha = H.row(a);
-			H.row(a) %= W.col(a).t() * (V / Vbar) / w.at(a);
-			Vbar += W.col(a) * (H.row(a) - ha);
+			H.row(a) %= W.col(a).t() * (A / Abar) / w.at(a);
+			Abar += W.col(a) * (H.row(a) - ha);
 		}
-		err.at(i) =  std::sqrt(mean(mean(square(V - Vbar), 1)));
+		err.at(i) = mean(mean(A % (arma::trunc_log(A) - arma::trunc_log(Abar)) - A - Abar));
 		if (i > 0 && std::abs(err.at(i) - err.at(i-1)) < tol)
 		{
 			err.resize(i);
@@ -130,9 +117,8 @@ RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_, SEXP n
 
 	if (max_iter <= i)
 	{
-		Rcpp::Function warning("warning");
-		warning("Target tolerence not reached. Try a larger max.iter.");
+		Rcpp::warning("Target tolerence not reached. Try a larger max.iter.");
 	}
 
-	return Rcpp::wrap(H);
+	return H;
 }

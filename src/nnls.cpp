@@ -2,7 +2,7 @@
 
 
 //[[Rcpp::export]]
-RcppExport SEXP c_nnls(SEXP A_, SEXP b_, SEXP max_iter_, SEXP tol_, SEXP n_threads_, SEXP show_progress_)
+mat nnls(const mat & A, const mat & b, int max_iter, double tol, int n_threads, bool show_progress)
 {
 	/*
 	 * Description: sequential Coordinate-wise algorithm for non-negative least square regression problem
@@ -20,13 +20,6 @@ RcppExport SEXP c_nnls(SEXP A_, SEXP b_, SEXP max_iter_, SEXP tol_, SEXP n_threa
 	 * Version:
 	 * 	2015-10-31
 	 */
-
-	mat A = Rcpp::as<mat>(A_);
-	mat b = Rcpp::as<mat>(b_);
-	int max_iter = Rcpp::as<int>(max_iter_);
-	int tol = Rcpp::as<double>(tol_);
-	int n_threads = Rcpp::as<int>(n_threads_);
-	bool show_progress = Rcpp::as<int>(show_progress_);
 
 	// This following code is duplicated with nnls_solve in nmf_nnls.cpp, as there is an InterruptableProgressMonitor conflit when use Progress::check_abort
 
@@ -62,5 +55,5 @@ RcppExport SEXP c_nnls(SEXP A_, SEXP b_, SEXP max_iter_, SEXP tol_, SEXP n_threa
 		}
 	}
 
-	return Rcpp::wrap(x);
+	return x;
 }

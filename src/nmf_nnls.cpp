@@ -2,7 +2,7 @@
 
 
 //[[Rcpp::export]]
-RcppExport SEXP nmf_nnls(SEXP A_, SEXP k_, SEXP eta_, SEXP beta_, SEXP max_iter_, SEXP tol_, SEXP n_threads_, SEXP show_progress_)
+Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter, double tol, int n_threads, bool show_progress)
 {
 	/*
 	 * Description:
@@ -28,14 +28,6 @@ RcppExport SEXP nmf_nnls(SEXP A_, SEXP k_, SEXP eta_, SEXP beta_, SEXP max_iter_
 	 * 	2015-10-31
 	 */
 
-	mat A = Rcpp::as<mat>(A_);
-	int k = Rcpp::as<int>(k_);
-	int max_iter = Rcpp::as<int>(max_iter_);
-	double eta = Rcpp::as<double>(eta_), beta = Rcpp::as<double>(beta_);
-	double tol = Rcpp::as<double>(tol_);
-	int n_threads = Rcpp::as<int>(n_threads_);
-	bool show_progress = Rcpp::as<int>(show_progress_);
-
 	mat W(A.n_rows, k, fill::randu);
 	mat H(k, A.n_cols);
 	W = normalise(W);  
@@ -60,8 +52,7 @@ RcppExport SEXP nmf_nnls(SEXP A_, SEXP k_, SEXP eta_, SEXP beta_, SEXP max_iter_
 	int i = 0;
 	for(; i < max_iter; i++)
 	{
-		if (Progress::check_abort()) 
-			return R_NilValue;
+		Rcpp::checkUserInterrupt();
 
 		prgrss.increment();
 
@@ -88,8 +79,8 @@ RcppExport SEXP nmf_nnls(SEXP A_, SEXP k_, SEXP eta_, SEXP beta_, SEXP max_iter_
 
 	if (max_iter <= i)
 	{
-		Rcpp::Function warning("warning");
-		warning("Target tolerence not reached. Try a larger max.iter.");
+		//Rcpp::Function warning("warning");
+		Rcpp::warning("Target tolerence not reached. Try a larger max.iter.");
 	}
 
 	err.resize(i < max_iter ? i+1 : max_iter);
@@ -106,7 +97,7 @@ RcppExport SEXP nmf_nnls(SEXP A_, SEXP k_, SEXP eta_, SEXP beta_, SEXP max_iter_
 }
 
 
-mat nnls_solver(mat H, mat mu, int max_iter = 500, double tol = 1e-6, unsigned int n_threads = 0)
+mat nnls_solver(const mat & H, mat mu, int max_iter, double tol, int n_threads)
 {
 	/*
 	 * Description: sequential Coordinate-wise algorithm for non-negative least square regression problem

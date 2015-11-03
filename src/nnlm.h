@@ -1,3 +1,6 @@
+#include <cmath>
+
+//SUPPORT_OPENMP is defined by R SHLIB
 #ifdef SUPPORT_OPENMP
 #include <omp.h>
 #endif
@@ -15,11 +18,12 @@
 //using namespace Rcpp;
 using namespace arma;
 
-mat nnls_solver(mat H, mat mu, int max_iter, double tol, unsigned int);
-RcppExport SEXP c_nnls(SEXP A_, SEXP b_, SEXP max_iter_, SEXP tol_, SEXP n_threads_, SEXP show_progress_);
-RcppExport SEXP nmf_nnls(SEXP A_, SEXP k_, SEXP eta_, SEXP beta_, SEXP max_iter_, SEXP tol_, SEXP n_threads_, SEXP show_progress_);
 
-RcppExport SEXP nmf_brunet(SEXP V_, SEXP k_, SEXP max_iter_, SEXP tol_, SEXP n_threads_, SEXP show_progress_);
-RcppExport SEXP get_H_brunet(SEXP V_, SEXP W_, SEXP max_iter_, SEXP tol_, SEXP n_threads_, SEXP show_progress_);
+mat nnls_solver(const mat & H, mat mu, int max_iter = 1000, double tol = 1e-6, int n_threads = 0);
+mat nnls(const mat & A, const mat & b, int max_iter = 1000, double tol = 1e-6, int n_threads = 1, bool show_progress = false);
+Rcpp::List nmf_nnls(const mat & A, int k, double eta = 0, double beta = 0, int max_iter = 1000, double tol = 1e-6, int n_threads = 1, bool show_progress = false);
 
+
+Rcpp::List nmf_brunet(const mat & A, int k, int max_iter = 1000 , double tol = 1e-6, int n_threads = 1, bool show_progress = false);
+mat get_H_brunet(const mat & A, const mat & W, int max_iter = 10000, double tol = 1e-6, int n_threads = 1, bool show_progress = false);
 // Rcpp::List nmf_ols(mat A, int k, double eta, double beta, int max_iter, double tol); 
