@@ -6,7 +6,7 @@
 \usage{
 \method{predict}{NNMF}(object, newdata, which.matrix = c("H", "W"),
   method = object$method, max.iter = 500L, tol = .Machine$double.eps,
-  n.threads = 0L, show.progress = TRUE, ...)
+  n.threads = 1L, show.progress = TRUE, ...)
 }
 \arguments{
 \item{object}{An NNMF object returned by \code{\link{nnmf}}}
@@ -21,7 +21,7 @@
 
 \item{tol}{Stop criterion, maximum difference of target_error between two successive iterations}
 
-\item{n.threads}{An integer number of threads/CPUs to use. Default to 0, which depends on OPENMP (usually all cores)}
+\item{n.threads}{An integer number of threads/CPUs to use. Default to 1(no parallel). Use 0 for all cores}
 
 \item{show.progress}{TRUE/FALSE indicating if to show a progress bar}
 

@@ -5,7 +5,7 @@
 \title{Non-negative matrix factorization}
 \usage{
 nnmf(A, k = 1L, method = c("nnls", "brunet"), eta = 0, beta = 0,
-  max.iter = 500L, tol = 1e-06, check.k = TRUE, n.threads = 0L,
+  max.iter = 500L, tol = 1e-06, check.k = TRUE, n.threads = 1L,
   show.progress = TRUE)
 }
 \arguments{
@@ -21,11 +21,11 @@ nnmf(A, k = 1L, method = c("nnls", "brunet"), eta = 0, beta = 0,
 
 \item{max.iter}{Maximum iteration of alternating NNLS solutions to H and W}
 
-\item{tol}{Stop criterion, maximum difference of target_error between two successive iterations.}
+\item{tol}{Stop criterion, maximum difference of target_error between two successive iterations}
 
 \item{check.k}{If to check wheter k <= n*m/(n+m), where (n,m)=dim(A)}
 
-\item{n.threads}{An integer number of threads/CPUs to use. Default to 0, which depends on OPENMP (usually all cores)}
+\item{n.threads}{An integer number of threads/CPUs to use. Default to 1(no parallel). Specifiy 0 for all cores}
 
 \item{show.progress}{TRUE/FALSE indicating if to show a progress bar}
 }
@@ -33,7 +33,8 @@ nnmf(A, k = 1L, method = c("nnls", "brunet"), eta = 0, beta = 0,
 A list of W, H and
 	\itemize{
 		\item{error}{root mean square error between A and W*H}
-		\item{target_error}{root mean(devided by nxm) square error of the target function. Same as error if no penalty}
+		\item{target.error}{error used to stop iteration}
+		\item{target.measure}{the measure for \code{target.error}}
 	}
 }
 \description{
