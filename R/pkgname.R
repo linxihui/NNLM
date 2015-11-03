@@ -7,6 +7,7 @@
 NULL
 
 # @importFrom stats predict
+# @exportPattern "^[^\\.]"
 
 #' @import Rcpp
 #' @useDynLib NNLM

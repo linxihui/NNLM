@@ -14,15 +14,16 @@
 #' @param eta           L2 penalty on the left (W). Default to no penalty. If eta < 0 then eta = max(A). Effective only when \code{method = 'nnls'}
 #' @param beta          L1 penalty on the right (H). Default to no penalty. Effective only when \code{method = 'nnls'}
 #' @param max.iter      Maximum iteration of alternating NNLS solutions to H and W
-#' @param tol           Stop criterion, maximum difference of target_error between two successive iterations.
+#' @param tol           Stop criterion, maximum difference of target_error between two successive iterations
 #' @param check.k       If to check wheter k <= n*m/(n+m), where (n,m)=dim(A)
-#' @param n.threads     An integer number of threads/CPUs to use. Default to 0, which depends on OPENMP (usually all cores)
+#' @param n.threads     An integer number of threads/CPUs to use. Default to 1(no parallel). Specifiy 0 for all cores
 #' @param show.progress TRUE/FALSE indicating if to show a progress bar
 #' @return A list of W, H and 
 #' 	\itemize{
 #' 		\item{error}{root mean square error between A and W*H}
-#' 		\item{target_error}{root mean(devided by nxm) square error of the target function. Same as error if no penalty}
-#' 	}
+#' 		\item{target.error}{error used to stop iteration}
+#' 		\item{target.measure}{the measure for \code{target.error}}
+#' 	} 
 #' @author Eric Xihui Lin, \email{xihuil.silence@@gmail.com}
 #' @seealso \code{\link{nnls}}, \code{\link{predict.NNMF}}
 #' @examples
@@ -34,7 +35,7 @@
 #'
 nnmf <- function(
 	A, k = 1L, method = c('nnls', 'brunet'), eta = 0, beta = 0, max.iter = 500L, 
-	tol = 1e-6, check.k = TRUE, n.threads = 0L, show.progress = TRUE
+	tol = 1e-6, check.k = TRUE, n.threads = 1L, show.progress = TRUE
 	) {
 	method = match.arg(method);
 	if (!is.matrix(A)) x <- as.matrix(A);
@@ -46,12 +47,12 @@ nnmf <- function(
 	if (n.threads < 0L) n.threads <- 0L;
 
 	out <- switch(method,
-		'nnls' = .Call('nmf_nnls', 
+		'nnls' = .Call('NNLM_nmf_nnls', 
 			A, as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
 			as.double(tol), as.integer(n.threads), as.logical(show.progress),
 			PACKAGE = 'NNLM'
 			),
-		'brunet' = .Call('nmf_brunet', 
+		'brunet' = .Call('NNLM_nmf_brunet', 
 			A, as.integer(k), as.integer(max.iter), as.double(tol), 
 			as.integer(n.threads), as.logical(show.progress), 
 			PACKAGE = 'NNLM'
@@ -64,9 +65,12 @@ nnmf <- function(
 	out$iteration <- length(out$error);
 	out$method <- method;
 	out$tol <- tol;
-	if ('brunet' == method) out$target_error <- out$error;
-	out$target_error <- as.vector(out$target_error);
+	out$target.error <- as.vector(out$target_error);
 	out$error <- as.vector(out$error);
+	out$target.measure <- ifelse('brunet' == method, 
+		'Mean Kullback-Leibler Divergence',
+		ifelse(0 == eta && 0 == beta, 'Root Mean Square Error',
+			'Penalized Root Mean Square Error'));
 
 	return(structure(out, class = 'NNMF'));
 	}
@@ -80,7 +84,7 @@ nnmf <- function(
 #' @param method        Either 'nnls' or 'brunet'. Default to \code{object$method}
 #' @param max.iter      Maximum number of iterations
 #' @param tol           Stop criterion, maximum difference of target_error between two successive iterations
-#' @param n.threads     An integer number of threads/CPUs to use. Default to 0, which depends on OPENMP (usually all cores)
+#' @param n.threads     An integer number of threads/CPUs to use. Default to 1(no parallel). Use 0 for all cores
 #' @param show.progress TRUE/FALSE indicating if to show a progress bar
 #' @param ...           Unsued, just for compatiblity
 #' @return \code{W} or \code{H} for newdata given pre-computed H or W
@@ -96,7 +100,7 @@ nnmf <- function(
 #'
 predict.NNMF <- function(
 	object, newdata, which.matrix = c('H', 'W'), method = object$method, 
-	max.iter = 500L, tol = .Machine$double.eps, n.threads = 0L, show.progress = TRUE,
+	max.iter = 500L, tol = .Machine$double.eps, n.threads = 1L, show.progress = TRUE,
 	...) {
 	which.matrix <- match.arg(which.matrix);
 	if (!is.matrix(newdata)) newdata <- as.matrix(newdata);
@@ -115,11 +119,11 @@ predict.NNMF <- function(
 			},
 		'brunet' = {
 			switch(which.matrix,
-				'H' = .Call('get_H_brunet', 
+				'H' = .Call('NNLM_get_H_brunet', 
 					newdata, object$W, max.iter, tol, n.threads, show.progress, 
 					PACKAGE = 'NNLM'
 					),
-				'W' = t(.Call( 'get_H_brunet', 
+				'W' = t(.Call( 'NNLM_get_H_brunet', 
 					t(newdata), t(object$H), max.iter, tol, n.threads, show.progress, 
 					PACKAGE = 'NNLM')
 					))
