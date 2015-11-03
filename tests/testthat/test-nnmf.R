@@ -46,10 +46,14 @@ test_that("Test NMF using Brunet' multiplicative update", {
 	dimnames(A) <- list(paste0('R', 1:6), paste0('C', 1:5));
 	A.nnmf2 <- nnmf(A, 2, 'brunet');
 	W.new <- predict(A.nnmf2, A[1:4, ], which = 'W')
-	expect_warning(nnmf(A, 2, 'b', max.it = 5L), 
-		'Target tolerence not reached. Try a larger max.iter.');
 
 	expect_equal(dimnames(A.nnmf2$W), list(rownames(A), NULL));
 	expect_equal(dimnames(A.nnmf2$H), list(NULL, colnames(A)));
 	expect_equal(dimnames(W.new), list(rownames(A[1:4, ]), NULL));
+
+	expect_warning(nnmf(A, 2, 'b', max.it = 5L),
+		'Target tolerence not reached. Try a larger max.iter.');
+
+	expect_warning(predict(A.nnmf2, A[, 1:2], max.it = 2, which = 'H'),
+		'Target tolerence not reached. Try a larger max.iter.');
 	})
