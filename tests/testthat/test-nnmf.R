@@ -6,7 +6,7 @@ test_that("Test NMF using nnls", {
 	H <- matrix(runif(15), 3);
 
 	A <- W %*% H;
-	A.nnmf <- nnmf(A, 3, max.it = 5000L, tol = 1e-16);
+	A.nnmf <- nnmf(A, 3, max.iter = 10000L, rel.tol=1e-6);
 
 	expect_true(all(A.nnmf$W >= 0));
 	expect_true(all(A.nnmf$H >= 0));
@@ -16,11 +16,16 @@ test_that("Test NMF using nnls", {
 
 	dimnames(A) <- list(paste0('R', 1:nrow(A)), paste0('C', 1:ncol(A)));
 
-	A.nnmf2 <- nnmf(A, 2, eta = -1, beta = 0.01);
+	A.nnmf2 <- nnmf(A, 2, eta = 0.1, beta = 0.01);
+	print(A.nnmf2)
+	plot(A.nnmf2)
+	plot(A.nnmf2, 'target.error')
+	plot(A.nnmf2, 'H')
 	W.new <- predict(A.nnmf2, A[1:4, ], which = 'W')
 
-	expect_warning(nnmf(A, 2, eta = 0.1, beta = 0, max.it = 10L), 
+	expect_warning(nnmf(A, 2, eta = 0.1, beta = 0, max.iter = 10L), 
 		'Target tolerence not reached. Try a larger max.iter.');
+
 	expect_error(nnmf(A, 10));
 
 	expect_equal(dimnames(A.nnmf2$W), list(rownames(A), NULL));
@@ -35,7 +40,7 @@ test_that("Test NMF using Brunet' multiplicative update", {
 	H <- matrix(runif(15), 3);
 
 	A <- W %*% H;
-	A.nnmf <- nnmf(A, 3, method = 'b', max.it = 5000L, tol = 1e-16);
+	A.nnmf <- nnmf(A, 3, method = 'b', max.iter = 50000L, rel.tol = 1e-20);
 
 	expect_true(all(A.nnmf$W >= 0));
 	expect_true(all(A.nnmf$H >= 0));
@@ -51,9 +56,9 @@ test_that("Test NMF using Brunet' multiplicative update", {
 	expect_equal(dimnames(A.nnmf2$H), list(NULL, colnames(A)));
 	expect_equal(dimnames(W.new), list(rownames(A[1:4, ]), NULL));
 
-	expect_warning(nnmf(A, 2, 'b', max.it = 5L),
+	expect_warning(nnmf(A, 2, 'b', max.iter = 5L),
 		'Target tolerence not reached. Try a larger max.iter.');
 
-	expect_warning(predict(A.nnmf2, A[, 1:2], max.it = 2, which = 'H'),
+	expect_warning(predict(A.nnmf2, A[, 1:2], max.iter = 2, which = 'H'),
 		'Target tolerence not reached. Try a larger max.iter.');
 	})
