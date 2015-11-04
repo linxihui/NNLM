@@ -37,7 +37,6 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 	vec err(max_iter);
 	err.fill(-9999);
 	vec pen_err(err);
-	if (eta < 0) eta = max(max(A));
 
 	// check progression
 	Progress prgrss(max_iter, show_progress);
@@ -72,16 +71,12 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 		if (eta > 0) pen_err[i] += eta * mean(mean(square(W)))*k*k / A.n_rows;
 		pen_err[i] = std::sqrt(pen_err[i]);
 
-		if (i > 0 && std::abs(pen_err[i-1] - pen_err[i]) < tol) {
+		if (i > 0 && std::abs(pen_err[i-1] - pen_err[i]) / (pen_err[i-1] + 1e-6) < tol) 
 			break;
-			}
 	}
 
 	if (max_iter <= i)
-	{
-		//Rcpp::Function warning("warning");
 		Rcpp::warning("Target tolerence not reached. Try a larger max.iter.");
-	}
 
 	err.resize(i < max_iter ? i+1 : max_iter);
 	pen_err.resize(err.n_elem);
@@ -90,9 +85,7 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 		Rcpp::Named("W") = W, 
 		Rcpp::Named("H") = H, 
 		Rcpp::Named("error") = arma::sqrt(err),
-		Rcpp::Named("target_error") = arma::sqrt(pen_err),
-		Rcpp::Named("eta") = eta,
-		Rcpp::Named("beta") = beta
+		Rcpp::Named("target_error") = arma::sqrt(pen_err)
 		);
 }
 
@@ -127,8 +120,8 @@ mat nnls_solver(const mat & H, mat mu, int max_iter, double tol, int n_threads)
 		x0.fill(-9999);
 		double tmp;
 		int i = 0;
-		while(i < max_iter && arma::max(arma::abs(x.col(j) - x0)) > tol)
-		{
+		double err1, err2 = 9999;
+		do {
 			x0 = x.col(j);
 			for (int k = 0; k < H.n_cols; k++) 
 			{
@@ -137,8 +130,9 @@ mat nnls_solver(const mat & H, mat mu, int max_iter, double tol, int n_threads)
 				if (tmp != x.at(k,j)) mu.col(j) += (tmp - x.at(k, j)) * H.col(k);
 				x.at(k,j) = tmp;
 			}
-			++i;
-		}
+			err1 = err2;
+			err2 = arma::max(arma::abs(x.col(j) - x0));
+		} while(++i < max_iter && std::abs(err1 - err2) / (err1 + 1e-9) > tol);
 	}
 
 	return x;
