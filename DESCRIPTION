@@ -1,15 +1,26 @@
 Package: NNLM
 Type: Package
-Title: Non-Negative Linear Models, including a fast non-negative least square (NNLS) solver and some non-negative matrix factorization (NMF) algorithms
-Description: This is a package for Non-Negative Linear Models. It contains a fast non-negative least square (NNLS) solver using sequential coordinate descent algorithm and non-negative matrix factorization (NMF) algorithms.
+Title: Fast solvers for non-negative least square (NNLS) and non-negative matrix factorization (NMF)
+Description: This is a package for Non-Negative Linear Models. It implements a
+    fast sequential coordinate descent algorithm for non-negative least square (NNLS)
+    and two fast algorithms for non-negative matrix factorization.
 Version: 0.0.2
 Date: 2015-10-31
 Authors@R: person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre"))
-Depends: R (>= 3.0.1)
-Imports: Rcpp (>= 0.11.0)
+Depends:
+    R (>= 3.0.1)
+Imports:
+    Rcpp (>= 0.11.0)
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress
-License: BSD_2_clause + file LICENSE
 LazyData: yes
 LazyLoad: yes
 NeedsCompilation: yes
-Suggests: testthat
+Suggests:
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 5.0.0
+License: BSD_2_clause + file LICENSE
+BugReports: https://github.com/linxihui/NNLM/issues
+URL: https://github.com/linxihui/NNLM

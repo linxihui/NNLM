@@ -6,6 +6,6 @@
 \alias{NNLM-package}
 \title{Fast NNLS and NNMF}
 \description{
-This package is built for fast non-negative least square (NNLS) reguression and non-negative matrix factorization (NNMF).
+This package is built for fast non-negative least square (NNLS) regression and non-negative matrix factorization (NNMF).
 }
 

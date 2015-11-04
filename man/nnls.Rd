@@ -2,13 +2,13 @@
 % Please edit documentation in R/nnls.R
 \name{nnls}
 \alias{nnls}
-\title{Non-negative least square}
+\title{Non-negative least square (NNLS)}
 \usage{
-nnls(x, y, check.x = TRUE, max.iter = 10000L, tol = .Machine$double.eps,
+nnls(x, y, check.x = TRUE, max.iter = 10000L, rel.tol = 1e-04,
   n.threads = 1L, show.progress = TRUE)
 }
 \arguments{
-\item{x}{Design mamtrix}
+\item{x}{Design matrix}
 
 \item{y}{Vector or matrix of response}
 
@@ -16,18 +16,23 @@ nnls(x, y, check.x = TRUE, max.iter = 10000L, tol = .Machine$double.eps,
 
 \item{max.iter}{Maximum number of iterations}
 
-\item{tol}{Stop criterion, minimum change on x between two successive iteration}
+\item{rel.tol}{Stop criterion, relative change on x between two successive iteration}
 
-\item{n.threads}{An integer number of threads/CPUs to use. Default to 1(no parallel). Use 0 for all cores}
+\item{n.threads}{An integer number of threads/CPUs to use. Default to 1 (no parallel). Use 0 for all cores}
 
 \item{show.progress}{TRUE/FALSE indicating if to show a progress bar}
 }
 \value{
-A vector of non-negative coefficients, a solution to
-	argmin_{beta} ||y - x*beta||_F^2, s.t. beta >= 0
+A list of with components \itemize{
+	\item{coefficients: } {A matrix or vector (depend on y) of the NNLS solution beta}
+	\item{iteration: }{a vector of numbers of iterations for each column of y}
+	\item{abs.err: }{a vector of absolute error, i.e., difference between two successive iterations, for each column of y}
+	\item{rel.err: }{a vector of relative error, i.e., relative difference between two successive iterations, for each column of y}
+	}
 }
 \description{
-Sequential coordinate-wise algorithm for non-negative least square regression
+Sequential coordinate-wise algorithm for non-negative least square regression \cr
+		\deqn{argmin_{\beta \ge 0} ||y - x*\beta||_F^2}
 }
 \examples{
 x <- 10*matrix(runif(50*20), 50, 20)-1

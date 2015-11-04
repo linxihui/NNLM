@@ -5,7 +5,7 @@
 \title{Non-negative matrix factorization}
 \usage{
 nnmf(A, k = 1L, method = c("nnls", "brunet"), eta = 0, beta = 0,
-  max.iter = 500L, tol = 1e-06, check.k = TRUE, n.threads = 1L,
+  max.iter = 500L, rel.tol = 1e-04, check.k = TRUE, n.threads = 1L,
   show.progress = TRUE)
 }
 \arguments{
@@ -21,31 +21,31 @@ nnmf(A, k = 1L, method = c("nnls", "brunet"), eta = 0, beta = 0,
 
 \item{max.iter}{Maximum iteration of alternating NNLS solutions to H and W}
 
-\item{tol}{Stop criterion, maximum difference of target_error between two successive iterations}
+\item{rel.tol}{Stop criterion, relative difference of target_error between two successive iterations}
 
-\item{check.k}{If to check wheter k <= n*m/(n+m), where (n,m)=dim(A)}
+\item{check.k}{If to check whether k <= n*m/(n+m), where (n,m)=dim(A)}
 
-\item{n.threads}{An integer number of threads/CPUs to use. Default to 1(no parallel). Specifiy 0 for all cores}
+\item{n.threads}{An integer number of threads/CPUs to use. Default to 1(no parallel). Specify 0 for all cores}
 
 \item{show.progress}{TRUE/FALSE indicating if to show a progress bar}
 }
 \value{
 A list of W, H and
 	\itemize{
-		\item{error}{root mean square error between A and W*H}
-		\item{target.error}{error used to stop iteration}
-		\item{target.measure}{the measure for \code{target.error}}
+		\item{error:}{ root mean square error between A and W*H}
+		\item{target.error:}{ error used to stop iteration}
+		\item{target.measure:}{ the measure for \code{target.error}}
 	}
 }
 \description{
 Non-negative matrix factorization(NNMF) using alternating NNLS or Brunet's multiplicative update
 }
 \details{
-The problem to solved is
-	  argmin_{W>=0, H>=0} ||A - WH||_2^2 + eta*||W||_F^2 + beta*sum(||H.col(j)||_1^2)
-If \code{method = 'nnls'} Apply \code{\link{nnls}} to W and H alternatingly, where \code{\link{nnls}} is implemented
-using sequential coordinate descend methods. If \code{method = 'brunet'}, Decomposition is done using Brunet's
-multiplicative updates based on KL divergence. Note that penalties \code{eta}, \code{beta} are supported only when \code{method = 'nnls'}.
+The problem to solved is\cr
+	  \deqn{argmin_{W \ge 0, H \ge 0} ||A - WH||_2^2 + \eta*||W||_F^2 + \beta*\sum{j=1}^m (||H.col(j)||_1^2)} \cr
+If \code{method = 'nnls'}, \code{\link{nnls}} is applied to W and H alternatively, where \code{\link{nnls}} is implemented
+using sequential coordinate descend methods. If \code{method = 'brunet'}, decomposition is done using Brunet's
+multiplicative updates based on Kullback-Leibler divergence. Note that penalties \code{eta}, \code{beta} are supported only when \code{method = 'nnls'}.
 }
 \examples{
 x <- matrix(runif(50*20), 50, 20)
@@ -55,6 +55,6 @@ r <- nnmf(x, 2)
 Eric Xihui Lin, \email{xihuil.silence@gmail.com}
 }
 \seealso{
-\code{\link{nnls}}, \code{\link{predict.NNMF}}
+\code{\link{nnls}}, \code{\link{predict.nnmf}}
 }
 
