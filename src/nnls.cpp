@@ -2,7 +2,7 @@
 
 
 //[[Rcpp::export]]
-mat nnls(const mat & A, const mat & b, int max_iter, double tol, int n_threads, bool show_progress)
+Rcpp::List nnls(const mat & A, const mat & b, int max_iter, double tol, int n_threads, bool show_progress)
 {
 	/*
 	 * Description: sequential Coordinate-wise algorithm for non-negative least square regression problem
@@ -10,7 +10,7 @@ mat nnls(const mat & A, const mat & b, int max_iter, double tol, int n_threads, 
 	 * Arguments:
 	 * 	A, b: see above
 	 * 	max_iter: maximum number of iterations.
-	 * 	tol: stop criterion, minimum change on x between two successive iteration.
+	 * 	tol: stop criterion, relative change on x between two successive iteration.
 	 * Return: 
 	 * 	x: solution to argmin_{x, x>=0} ||Ax - b||_F^2
 	 * Reference: 
@@ -27,8 +27,17 @@ mat nnls(const mat & A, const mat & b, int max_iter, double tol, int n_threads, 
 	mat mu = -A.t()*b;
 
 	mat x(H.n_cols, mu.n_cols, fill::zeros);
-	Progress p(mu.n_cols*max_iter, show_progress);
 	if (n_threads < 0) n_threads = 0; 
+
+	vec err(mu.n_cols);
+	vec rel_err(mu.n_cols);
+	vec iter(mu.n_cols);
+
+	err.fill(-1);
+	rel_err.fill(-1);
+	iter.fill(-1);
+
+	Progress p((mu.n_cols*max_iter)/10 + 1, show_progress);
 
 	#pragma omp parallel for num_threads(n_threads) schedule(dynamic)
 	for (int j = 0; j < mu.n_cols; j++)
@@ -37,23 +46,36 @@ mat nnls(const mat & A, const mat & b, int max_iter, double tol, int n_threads, 
 		x0.fill(-9999);
 		double tmp;
 		int i = 0;
-		while(i < max_iter && arma::max(arma::abs(x.col(j) - x0)) > tol)
-		{
-			if (!Progress::check_abort()) 
+		double err1; //last error
+		double err2 = 9999; //current error
+		do {
+			if (i % 10 == 0)
 			{
+				if (Progress::check_abort())
+					break;
 				p.increment(); // update progress
-				x0 = x.col(j);
-				for (int k = 0; k < H.n_cols; k++) 
-				{
-					tmp = x.at(k,j) - mu.at(k,j) / H.at(k,k);
-					if (tmp < 0) tmp = 0;
-					if (tmp != x.at(k,j)) mu.col(j) += (tmp - x.at(k, j)) * H.col(k);
-					x.at(k,j) = tmp;
-				}
 			}
-			++i;
-		}
+			x0 = x.col(j);
+			for (int k = 0; k < H.n_cols; k++)
+			{
+				tmp = x.at(k,j) - mu.at(k,j) / H.at(k,k);
+				if (tmp < 0) tmp = 0;
+				if (tmp != x.at(k,j)) mu.col(j) += (tmp - x.at(k, j)) * H.col(k);
+				x.at(k,j) = tmp;
+			}
+			err1 = err2;
+			err2 = arma::max(arma::abs(x.col(j) - x0));
+		} while(++i < max_iter && std::abs(err1 - err2) / (err1 + 1e-6) > tol);
+
+		err[j] = err2;
+		rel_err[j] = std::abs(err1 - err2) / (err1 + 1e-6);
+		iter[j] = i;
 	}
 
-	return x;
+	return Rcpp::List::create(
+		Rcpp::Named("x") = x,
+		Rcpp::Named("iteration") = iter,
+		Rcpp::Named("abs.err") = err,
+		Rcpp::Named("rel.err") = rel_err
+		);
 }
