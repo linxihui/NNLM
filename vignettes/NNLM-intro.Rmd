@@ -1,0 +1,80 @@
+---
+title: "Quick guide to NNLM"
+author: "[Eric Xihui Lin](https://github.com/linxihui)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This package includes two main functions, `nnls` and `nnmf`.  `nnls` solves the following non-negative least square(NNLS)
+$$ \mbox{argmin}_{\beta \ge 0} ||y - x\beta||_F $$
+where $F$ is the Frobenius normal of a matrix, analogous to the L2 normal of a vector. While `nnmf` solves a non-negative
+matrix factorization problem like
+$$ \mbox{argmin}_{W \ge 0, H \ge 0} ||A - WH||_F^2 + \eta ||W||_F^2 + \beta \sum_{j=1}^m ||h_j||_1^2 $$
+where $m$ is the number of columns of $A$, $h_j$ is the j-th column of $H$. Here $\eta$ can used to 
+control magnitude of $W$ and $\beta$ is for both magnitude and sparsity of matrix $H$.
+
+
+The function `nnls` in R package [`nnls`](https://cran.r-project.org/web/packages/nnls/index.html)
+implemented Lawson-Hanson algorithm in Fortran for the above NNLS problem.
+However he Lawson-Hanson algorithm is slow to be embedded to solve other problems like NMF. 
+The `nnls` function in our package is implemented in C++, using a coordinate-wise descent algorithm, 
+which has been shown to be much faster.  `nnmf` is an non-negative matrix factorization solver 
+using alternating NNLS and Brunet's multiplicative updates, 
+which are all implemented in C++ too. Due to the fast `nnls`, this functions is way more fast
+than the standard R package [`NMF`](https://cran.r-project.org/web/packages/NMF/index.html). 
+Thus `NNLM` is a package more suitable for larger data sets and bigger hidden features (rank).  
+In addition. `nnls` and `nnmf` are both parallelled via openMP for even better performance.
+
+
+In bioinformatics, NMF can be used to discover 'meta-genes' from expression profile, which is a linear combination of genes
+may or may not related to some biology path ways.  In this case, $A$ is usually arranged as _rows = genes_ and _columns = patients_. 
+The columns of $W$ can then be interpreted as meta-genes, and $H$ are said to be the expression profile of meta-genes. 
+
+
+In text mining, especially topic discovery, NMF is used to group documents into topics. In this case,
+$A$ is a bag-of-word representation (counts of a word in a document) of a batch of documents, 
+with _rows = vocabulary_, and _columns = documents_.  In NMF, the columns of $W$ (after normalization) represent topics (a topic
+is represented as the ditribution of vocabulary), and the column of $H$ shows that topics a document covered. This is similar
+to latent Dirichlet allocation (LDA) analysis, except that NMF cannot guarantee that all the columns of $H$ sum to 1 (probability distribution).
+
+## Install
+```{r, echo = TRUE, eval = FALSE}
+# from CRAN
+install.packages('NNLM');
+
+# or get a dev-version
+library(devtools);
+install_github('linxihui/NNLM')
+```
+
+## A simple example: Non-small Cell Lung Cancer expression data
+```{r nsclc, fig.show = 'hold', message = TRUE}
+library(NNLM);
+
+data(nsclc, package = 'NNLM')
+str(nsclc)
+
+# create 5 meta-gene signatures, using only 1 thread (no parallel)
+decomp <- nnmf(nsclc[, 1:80], 5, method = 'nnls', n.threads = 1, rel.tol = 1e-6)
+decomp
+
+plot(decomp, 'W', xlab = 'Meta-gene', ylab = 'Gene')
+plot(decomp, 'H', ylab = 'Meta-gene', xlab = 'Patient')
+```
+
+```{r nsclc2, fig.show = 'hold', message = TRUE, fig.align = 'center'}
+plot(decomp, ylab = 'RMSE')
+```
+
+We see that the default alternating NNLS method coverage fairly quickly.
+
+```{r nsclc3, fig.show = 'hold', message = TRUE, fig.align = 'center'}
+# find the expressions of meta-genes for patient 81-100
+newH <- predict(decomp, nsclc[, 81:100], which = 'H', show.progress = FALSE)
+str(newH)
+```
+
