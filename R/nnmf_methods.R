@@ -29,7 +29,7 @@
 #' plot(r, 'W')
 #'
 #' @seealso \code{\link{nnmf}}
-#' @export predict.nnmf
+#' @export
 predict.nnmf <- function(
 	object, newdata, which.matrix = c('H', 'W'), method = object$method, 
 	max.iter = 100L, rel.tol = object$rel.tol, n.threads = 1L, show.progress = TRUE,
@@ -78,7 +78,7 @@ predict.nnmf <- function(
 
 
 #' @rdname predict.nnmf
-#' @export print.nnmf
+#' @export
 print.nnmf <- function(x, ...) {
 	print(x$system.time);
 	nstep <- length(x$error);
@@ -92,7 +92,7 @@ print.nnmf <- function(x, ...) {
 #' @rdname predict.nnmf
 #' @param x     An NNMF object returned by \code{\link{nnmf}}
 #' @param which One of 'error', 'target', 'W', 'H'. The first two give line plots while the latter two give heatmaps
-#' @export plot.nnmf
+#' @export
 plot.nnmf <- function(x, which = c('error', 'target.error', 'W', 'H'),  ...) {
 	which <- match.arg(which);
 	dots <- list(...);
