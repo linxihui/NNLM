@@ -11,7 +11,10 @@ Depends:
     R (>= 3.0.1)
 Imports:
     Rcpp (>= 0.11.0)
-LinkingTo: Rcpp, RcppArmadillo, RcppProgress
+LinkingTo: 
+    Rcpp, 
+	RcppArmadillo, 
+	RcppProgress
 LazyData: yes
 LazyLoad: yes
 NeedsCompilation: yes
