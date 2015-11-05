@@ -20,26 +20,27 @@ control magnitude of $W$ and $\beta$ is for both magnitude and sparsity of matri
 
 The function `nnls` in R package [`nnls`](https://cran.r-project.org/web/packages/nnls/index.html)
 implemented Lawson-Hanson algorithm in Fortran for the above NNLS problem.
-However he Lawson-Hanson algorithm is slow to be embedded to solve other problems like NMF. 
-The `nnls` function in our package is implemented in C++, using a coordinate-wise descent algorithm, 
-which has been shown to be much faster.  `nnmf` is an non-negative matrix factorization solver 
-using alternating NNLS and Brunet's multiplicative updates, 
-which are all implemented in C++ too. Due to the fast `nnls`, this functions is way more fast
+However the Lawson-Hanson algorithm is too slow to be embedded to solve other problems like NMF.
+The `nnls` function in this package is implemented in C++, using a coordinate-wise descent algorithm,
+which has been shown to be much faster.  `nnmf` is a non-negative matrix factorization solver
+using alternating NNLS and Brunet's multiplicative updates,
+which are both implemented in C++ too. Due to the fast `nnls`, `nnmf` is way faster
 than the standard R package [`NMF`](https://cran.r-project.org/web/packages/NMF/index.html). 
 Thus `NNLM` is a package more suitable for larger data sets and bigger hidden features (rank).  
-In addition. `nnls` and `nnmf` are both parallelled via openMP for even better performance.
+In addition. `nnls` is parallelled via openMP for even better performance.
 
 
-In bioinformatics, NMF can be used to discover 'meta-genes' from expression profile, which is a linear combination of genes
-may or may not related to some biology path ways.  In this case, $A$ is usually arranged as _rows = genes_ and _columns = patients_. 
-The columns of $W$ can then be interpreted as meta-genes, and $H$ are said to be the expression profile of meta-genes. 
+In bioinformatics, NMF can be used to discover 'meta-genes' from expression profile, which are linear combinations of genes that
+may or may not related to some biology path ways.  In this case, $A$ is usually arranged as _rows = genes_ and _columns = patients_.
+The columns of $W$ can then be interpreted as meta-genes, and $H$ are said to be the expression profile of meta-genes.
 
 
-In text mining, especially topic discovery, NMF is used to group documents into topics. In this case,
-$A$ is a bag-of-word representation (counts of a word in a document) of a batch of documents, 
+In text mining, such as topic discovery, NMF is used to group documents into topics, where
+$A$ is a bag-of-word representation (count of a word in a document) of a batch of documents,
 with _rows = vocabulary_, and _columns = documents_.  In NMF, the columns of $W$ (after normalization) represent topics (a topic
-is represented as the ditribution of vocabulary), and the column of $H$ shows that topics a document covered. This is similar
-to latent Dirichlet allocation (LDA) analysis, except that NMF cannot guarantee that all the columns of $H$ sum to 1 (probability distribution).
+is represented as the distribution over vocabulary), and a column of $H$ shows the topics a document covered. This is similar
+to latent Dirichlet allocation (LDA) analysis, except that NMF cannot guarantee that all the columns of $H$ sum up to 1 
+(probability distribution).
 
 ## Install
 ```{r, echo = TRUE, eval = FALSE}
