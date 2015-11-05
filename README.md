@@ -93,6 +93,6 @@ str(newH)
 4. ~~Vignette~~
 5. ~~Test~~
 6. ~~.traivs.yml~~
-7. code coverage: trouble to get a badget 
+7. ~~code coverage~~
 8. ~~Parallel, openMP support~~
 9. Support for missing values in NMF (can be used for imputation)
