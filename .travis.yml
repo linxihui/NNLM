@@ -17,10 +17,7 @@ script:
 
 install:
   - ./travis-tool.sh install_aptget r-cran-runit
-  - ./travis-tool.sh install_r Rcpp RcppArmadillo RcppProgress testthat knitr rmarkdown
-
-r_github_packages:
-  - jimhester/covr
+  - ./travis-tool.sh install_r Rcpp RcppArmadillo RcppProgress testthat knitr rmarkdown covr
 
 after_success:
   - Rscript -e 'library(covr);codecov()'
