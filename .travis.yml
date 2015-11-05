@@ -1,5 +1,5 @@
 language: r
-warnings_are_errors: true
+# warnings_are_errors: true
 sudo: required
 
 env:
@@ -21,6 +21,7 @@ install:
 
 r_github_packages:
   - jimhester/covr
+
 after_success:
   - Rscript -e 'library(covr);codecov()'
 
@@ -32,4 +33,4 @@ notifications:
     recipients:
       - xihuil.silence@gmail.com
     on_success: change
-    on_failure: always
+    on_failure: change
