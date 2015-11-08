@@ -113,7 +113,7 @@ nnmf <- function(
 		out$W1 <- out$W[, -seq_len(k)];
 		colnames(out$W1) <- rownames(W0);
 		out$H0 <- H0;
-		cout$W <- out$W[, seq_len(k)];
+		out$W <- out$W[, seq_len(k)];
 		}
 
 	names(out)[4] <- 'target.error';

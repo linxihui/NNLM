@@ -12,7 +12,7 @@
 
 <meta name="date" content="2015-11-08" />
 
-<title>Quick guide to NNLM</title>
+<title>A quick guide to NNLM</title>
 
 
 
@@ -52,8 +52,8 @@ code > span.er { color: #ff0000; font-weight: bold; }
 
 
 <div id="header">
-<h1 class="title">Quick guide to NNLM</h1>
-<h4 class="author"><em><a href="https://github.com/linxihui">Eric Xihui Lin</a></em></h4>
+<h1 class="title">A quick guide to NNLM</h1>
+<h4 class="author"><em>Eric Xihui Lin</em></h4>
 <h4 class="date"><em>2015-11-08</em></h4>
 </div>
 
@@ -65,8 +65,8 @@ code > span.er { color: #ff0000; font-weight: bold; }
 </div>
 <div id="install" class="section level2">
 <h2>Install</h2>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># from CRAN</span>
-<span class="kw">install.packages</span>(<span class="st">'NNLM'</span>);
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># from CRAN (not available yet)</span>
+<span class="co"># install.packages('NNLM');</span>
 
 <span class="co"># or get a dev-version</span>
 <span class="kw">library</span>(devtools);
@@ -104,7 +104,7 @@ code > span.er { color: #ff0000; font-weight: bold; }
 decomp &lt;-<span class="st"> </span><span class="kw">nnmf</span>(nsclc[, <span class="dv">1</span>:<span class="dv">80</span>], <span class="dv">5</span>, <span class="dt">method =</span> <span class="st">'nnls'</span>, <span class="dt">n.threads =</span> <span class="dv">1</span>, <span class="dt">rel.tol =</span> <span class="fl">1e-6</span>)
 decomp</code></pre>
 <pre><code>##    user  system elapsed 
-##   3.156   6.940   2.717 
+##   3.131   6.601   2.575 
 ## RMSE: 0.7333974</code></pre>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(decomp, <span class="st">'W'</span>, <span class="dt">xlab =</span> <span class="st">'Meta-gene'</span>, <span class="dt">ylab =</span> <span class="st">'Gene'</span>)
 <span class="kw">plot</span>(decomp, <span class="st">'H'</span>, <span class="dt">ylab =</span> <span class="st">'Meta-gene'</span>, <span class="dt">xlab =</span> <span class="st">'Patient'</span>)</code></pre>
@@ -143,20 +143,20 @@ deconvol &lt;-<span class="st"> </span><span class="kw">nnmf</span>(A, <span cla
 ## reached. Try a larger max.iter.</code></pre>
 <p>Check if <span class="math">\(W\)</span> and <span class="math">\(H\)</span>, our main interest, are recovered.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">round</span>(<span class="kw">cor</span>(W, deconvol$W), <span class="dv">2</span>);</code></pre>
-<pre><code>##       [,1]  [,2]  [,3]  [,4]  [,5]  [,6]
-## [1,] -0.01 -0.03  1.00  0.00  0.08 -0.06
-## [2,]  0.98  0.06 -0.05  0.00 -0.05 -0.04
-## [3,]  0.21 -0.08  0.06 -0.17  0.99 -0.04
-## [4,] -0.01  1.00  0.00  0.05 -0.04  0.03
-## [5,] -0.07  0.02 -0.05  0.99  0.04  0.01</code></pre>
+<pre><code>##       [,1]  [,2]  [,3]  [,4]  [,5]
+## [1,] -0.01 -0.03  1.00  0.00  0.08
+## [2,]  0.98  0.06 -0.05  0.00 -0.05
+## [3,]  0.21 -0.08  0.06 -0.17  0.99
+## [4,] -0.01  1.00  0.00  0.05 -0.04
+## [5,] -0.07  0.02 -0.05  0.99  0.04</code></pre>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">round</span>(<span class="kw">cor</span>(<span class="kw">t</span>(H), <span class="kw">t</span>(deconvol$H)), <span class="dv">2</span>);</code></pre>
-<pre><code>##       [,1]  [,2]  [,3]  [,4]  [,5]  [,6]  [,7]
-## [1,]  0.03  0.02  1.00  0.17  0.09 -0.02  0.00
-## [2,]  0.99  0.02 -0.01  0.15 -0.02 -0.05  0.02
-## [3,]  0.22 -0.02  0.04 -0.06  0.98  0.04  0.07
-## [4,] -0.02  1.00  0.05  0.01  0.03 -0.03 -0.02
-## [5,]  0.09 -0.01  0.11  1.00  0.11  0.05 -0.08</code></pre>
-<p>We see that <span class="math">\(W\)</span>, <span class="math">\(H\)</span> are just permuted. However, as we known that the minimization problem for NMF usually has not unique solutions for <span class="math">\(W\)</span> and <span class="math">\(H\)</span>. Therefore, <span class="math">\(W\)</span> and <span class="math">\(H\)</span> cannot be always recovered (different only with a permutation and a scaling).</p>
+<pre><code>##       [,1]  [,2]  [,3]  [,4]  [,5]
+## [1,]  0.03  0.02  1.00  0.17  0.09
+## [2,]  0.99  0.02 -0.01  0.15 -0.02
+## [3,]  0.22 -0.02  0.04 -0.06  0.98
+## [4,] -0.02  1.00  0.05  0.01  0.03
+## [5,]  0.09 -0.01  0.11  1.00  0.11</code></pre>
+<p>We see that <span class="math">\(W\)</span>, <span class="math">\(H\)</span> are just permuted. However, as we known that the minimization problem for NMF usually has not unique solutions for <span class="math">\(W\)</span> and <span class="math">\(H\)</span>. Therefore, <span class="math">\(W\)</span> and <span class="math">\(H\)</span> cannot be guaranteed to be recovered exactly(different only with a permutation and a scaling).</p>
 <pre class="sourceCode r"><code class="sourceCode r">permutation &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">2</span>, <span class="dv">4</span>);
 <span class="kw">round</span>(<span class="kw">cor</span>(W, deconvol$W[, permutation]), <span class="dv">2</span>);</code></pre>
 <pre><code>##       [,1]  [,2]  [,3]  [,4]  [,5]

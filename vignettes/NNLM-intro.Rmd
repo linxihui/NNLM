@@ -1,6 +1,6 @@
 ---
-title: "Quick guide to NNLM"
-author: "[Eric Xihui Lin](https://github.com/linxihui)"
+title: "A quick guide to NNLM"
+author: "Eric Xihui Lin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -35,8 +35,8 @@ In addition. `nnls` is parallelled via openMP for even better performance.
 ## Install
 
 ```{r, echo = TRUE, eval = FALSE}
-# from CRAN
-install.packages('NNLM');
+# from CRAN (not available yet)
+# install.packages('NNLM');
 
 # or get a dev-version
 library(devtools);
@@ -144,8 +144,8 @@ round(cor(t(H), t(deconvol$H)), 2);
 
 We see that $W$, $H$ are just permuted. However, as we known that
 the minimization problem for NMF usually has not unique solutions
-for $W$ and $H$. Therefore, $W$ and $H$ cannot be always recovered
-(different only with a permutation and a scaling).
+for $W$ and $H$. Therefore, $W$ and $H$ cannot be guaranteed to
+be recovered exactly(different only with a permutation and a scaling).
 
 ```{r deconvol3, message = TRUE}
 permutation <- c(3, 1, 5, 2, 4);
