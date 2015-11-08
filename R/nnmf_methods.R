@@ -8,9 +8,10 @@
 #' @param rel.tol       Stop criterion, relative difference of target_error between two successive iterations
 #' @param n.threads     An integer number of threads/CPUs to use. Default to 1(no parallel). Use 0 for all cores
 #' @param show.progress TRUE/FALSE indicating if to show a progress bar
+#' @param show.warning  If to show warnings when targetted \code{rel.tol} is not reached
 #' @param ...           Further arguments passed to 'print', 'plot' or 'heatmap'
 #' @return \itemize{
-#' 	\item{predict: }{\code{W} or \code{H} for newdata given pre-computed H or W}
+#' 	\item{predict: }{\code{W} or \code{H} for newdata given pre-computed H or W if \code{W0} and \code{H0} are NULL, else a list of \code{W, W1} or \code{H, H1}}
 #' 	\item{print: }{print running time and accuracy}
 #' 	\item{plot: }{line plot if which = 'error' or 'target.error' and heatmap if which = 'H' or 'W'}
 #' 	}
@@ -32,9 +33,11 @@
 #' @export
 predict.nnmf <- function(
 	object, newdata, which.matrix = c('H', 'W'), method = object$method, 
-	max.iter = 100L, rel.tol = object$rel.tol, n.threads = 1L, show.progress = TRUE,
+	max.iter = 100L, rel.tol = object$rel.tol, n.threads = 1L, 
+	show.progress = TRUE, show.warning = TRUE,
 	...) {
 	which.matrix <- match.arg(which.matrix);
+	check.input.matrix(newdata);
 	if (!is.matrix(newdata)) newdata <- as.matrix(newdata);
 	if (!is.double(newdata)) storage.mode(newdata) <- 'double';
 	if (!all(newdata >= 0)) stop("newdata must be non-negative");
@@ -46,24 +49,33 @@ predict.nnmf <- function(
 	out <- switch(method,
 		'nnls' = {
 			out <- switch(which.matrix,
-				'H' = nnls(object$W, newdata, 
-					check.x = TRUE, max.iter = max.iter, rel.tol = rel.tol, 
-					n.threads = n.threads, show.progress = show.progress
-					)$coefficients,
-				'W' = t(nnls(t(object$H), t(newdata), 
+				'H' = {
+					if(!is.null(object$H0)) newdata <- newdata - object$W1 %*% object$H0;
+					W <- object$W;
+					if(!is.null(object$W0)) W <- cbind(W, object$W0);
+					nnls(W, newdata, check.x = TRUE, max.iter = max.iter, rel.tol = rel.tol, 
+						n.threads = n.threads, show.progress = show.progress
+						)$coefficients
+					},
+				'W' = {
+					if(!is.null(object$W0)) newdata <- newdata - object$W0 %*% object$H1;
+					H <- t(object$H);
+					if(!is.null(object$H0)) H <- cbind(H, t(object$H0));
+					t(nnls(H, t(newdata), 
 						check.x = TRUE, max.iter = max.iter, rel.tol = rel.tol, 
 						n.threads = n.threads, show.progress = show.progress
 						)$coefficients)
+					}
 				)
 			},
 		'brunet' = {
 			switch(which.matrix,
 				'H' = .Call('NNLM_get_H_brunet', 
-					newdata, object$W, max.iter, rel.tol, n.threads, show.progress, 
+					newdata, object$W, max.iter, rel.tol, n.threads, show.progress, show.warning,
 					PACKAGE = 'NNLM'
 					),
 				'W' = t(.Call( 'NNLM_get_H_brunet', 
-					t(newdata), t(object$H), max.iter, rel.tol, n.threads, show.progress, 
+					t(newdata), t(object$H), max.iter, rel.tol, n.threads, show.progress, show.warning,
 					PACKAGE = 'NNLM')
 					)
 				)
@@ -73,7 +85,19 @@ predict.nnmf <- function(
 	if ('H' == which.matrix) colnames(out) <- colnames(newdata);
 	if ('W' == which.matrix) rownames(out) <- rownames(newdata);
 
-	return(out);
+	if ('H' == which.matrix && !is.null(object$W0))
+		out <- list(
+			H = out[seq_len(ncol(object$H)), , drop = FALSE],
+			H1 = out[-seq_len(ncol(object$H)), , drop = FALSE]
+			);
+
+	if ('W' == which.matrix && !is.null(object$H0))
+		out <- list(
+			W = out[, seq_len(ncol(object$W)), drop = FALSE],
+			W1 = out[, -seq_len(ncol(object$W)), drop = FALSE]
+			);
+
+ 	return(out);
 	}
 
 
@@ -91,9 +115,9 @@ print.nnmf <- function(x, ...) {
 
 #' @rdname predict.nnmf
 #' @param x     An NNMF object returned by \code{\link{nnmf}}
-#' @param which One of 'error', 'target', 'W', 'H'. The first two give line plots while the latter two give heatmaps
+#' @param which One of 'error', 'target', 'W', 'H', 'W1', 'H1'. The first two give line plots while the latter two give heatmaps
 #' @export
-plot.nnmf <- function(x, which = c('error', 'target.error', 'W', 'H'),  ...) {
+plot.nnmf <- function(x, which = c('error', 'target.error', 'W', 'H', 'W1', 'H1'),  ...) {
 	which <- match.arg(which);
 	dots <- list(...);
 
@@ -109,6 +133,11 @@ plot.nnmf <- function(x, which = c('error', 'target.error', 'W', 'H'),  ...) {
 	switch(which,
 		'error' = ,
 		'target.error' = do.call(plot, dots),
-		'W' =,
-		'H' = heatmap(x[[which]], ...))
+		'W' = , 'H' = ,
+		'W1' = , 'H1' = {
+			if(is.null(x[[which]]))
+				stop(sprintf("%s not found.", which));
+			heatmap(x[[which]], ...)
+			}
+		)
 	}
