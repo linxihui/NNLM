@@ -2,7 +2,7 @@
 
 
 //[[Rcpp::export]]
-mat get_H_brunet(const mat & A, const mat & W,  int max_iter, double tol, int n_threads, bool show_progress)
+mat get_H_brunet(const mat & A, const mat & W,  int max_iter, double tol, int n_threads, bool show_progress, bool show_warning)
 {
 	/*
 	 * Description:
@@ -40,7 +40,7 @@ mat get_H_brunet(const mat & A, const mat & W,  int max_iter, double tol, int n_
 	}
 
 
-	if (max_iter <= i)
+	if (show_warning && max_iter <= i)
 	{
 		err.resize(max_iter);
 		Rcpp::warning("Target tolerence not reached. Try a larger max.iter.");

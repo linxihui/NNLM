@@ -2,7 +2,7 @@
 
 
 //[[Rcpp::export]]
-Rcpp::List nmf_brunet(const mat & A, int k, int max_iter , double tol, int n_threads, bool show_progress)
+Rcpp::List nmf_brunet(const mat & A, int k, int max_iter , double tol, int n_threads, bool show_progress, bool show_warning)
 {
 	/* 
 	 * Description: 
@@ -56,7 +56,7 @@ Rcpp::List nmf_brunet(const mat & A, int k, int max_iter , double tol, int n_thr
 			break;
 	}
 
-	if (max_iter <= i)
+	if (show_warning && max_iter <= i)
 		Rcpp::warning("Target tolerence not reached. Try a larger max.iter.");
 
 	err.resize(i < max_iter ? i+1 : max_iter);

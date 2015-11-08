@@ -2,7 +2,7 @@
 
 
 //[[Rcpp::export]]
-Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter, double tol, int n_threads, bool show_progress)
+Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter, double tol, int n_threads, bool show_progress, bool show_warning)
 {
 	/*
 	 * Description:
@@ -32,7 +32,7 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 	mat H(k, A.n_cols);
 	W = normalise(W);  
 	mat WtW(W.n_cols, W.n_cols);
-	mat HHt(W.n_rows, H.n_rows);
+	mat HHt(H.n_rows, H.n_rows);
 	// err, pen_err = root mean square error/penalized_error
 	vec err(max_iter);
 	err.fill(-9999);
@@ -75,7 +75,7 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 			break;
 	}
 
-	if (max_iter <= i)
+	if (show_warning && max_iter <= i)
 		Rcpp::warning("Target tolerence not reached. Try a larger max.iter.");
 
 	err.resize(i < max_iter ? i+1 : max_iter);
@@ -123,7 +123,7 @@ mat nnls_solver(const mat & H, mat mu, int max_iter, double tol, int n_threads)
 		double err1, err2 = 9999;
 		do {
 			x0 = x.col(j);
-			for (int k = 0; k < H.n_cols; k++) 
+			for (int k = 0; k < H.n_cols; k++)
 			{
 				tmp = x.at(k,j) - mu.at(k,j) / H.at(k,k);
 				if (tmp < 0) tmp = 0;

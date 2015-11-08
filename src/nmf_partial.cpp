@@ -32,9 +32,7 @@ inline void update_WtA(mat & WtA, const mat & W, const mat & W1, const mat & A)
 	// (W, W1)^T A
 	int k = W.n_cols;
 	if (W1.empty())
-	{
 		WtA = -W.t()*A;
-	}
 	else
 	{
 		WtA.rows(0, k-1) = -W.t()*A;
@@ -45,9 +43,7 @@ inline void update_WtA(mat & WtA, const mat & W, const mat & W1, const mat & A)
 inline void update_WtA(mat & WtA, const mat & W, const mat & W1, const mat & H2, const mat & A)
 {
 	if (H2.empty()) 
-	{
 		update_WtA(WtA, W, W1, A);
-	}
 	else
 	{
 		int k = W.n_cols - H2.n_cols;
@@ -69,7 +65,8 @@ inline double mse(const mat & A, const mat & W, const mat & H, const mat & W1, c
 
 
 //[[Rcpp::export]]
-Rcpp::List nmf_offset(const mat & A, const mat & W1, const mat & H2, int k, double eta, double beta, int max_iter, double tol, int n_threads, bool show_progress = true, bool show_warning = true)
+Rcpp::List nmf_partial(const mat & A, const mat & W1, const mat & H2, int k, double eta, double beta, 
+	int max_iter, double tol, int n_threads, bool show_progress, bool show_warning)
 {
 	// A = [w w1 w2] [h h1 h2]^T
 	int n = A.n_rows, m = A.n_cols, kW = W1.n_cols, kH = H2.n_cols;
