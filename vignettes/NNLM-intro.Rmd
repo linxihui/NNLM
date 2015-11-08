@@ -9,6 +9,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+## Description
+
 This package includes two main functions, `nnls` and `nnmf`.  `nnls` solves the following non-negative least square(NNLS)
 $$ \mbox{argmin}_{\beta \ge 0} ||y - x\beta||_F $$
 where $F$ is the Frobenius normal of a matrix, analogous to the L2 normal of a vector. While `nnmf` solves a non-negative
@@ -30,19 +32,8 @@ Thus `NNLM` is a package more suitable for larger data sets and bigger hidden fe
 In addition. `nnls` is parallelled via openMP for even better performance.
 
 
-In bioinformatics, NMF can be used to discover 'meta-genes' from expression profile, which are linear combinations of genes that
-may or may not related to some biology path ways.  In this case, $A$ is usually arranged as _rows = genes_ and _columns = patients_.
-The columns of $W$ can then be interpreted as meta-genes, and $H$ are said to be the expression profile of meta-genes.
-
-
-In text mining, such as topic discovery, NMF is used to group documents into topics, where
-$A$ is a bag-of-word representation (count of a word in a document) of a batch of documents,
-with _rows = vocabulary_, and _columns = documents_.  In NMF, the columns of $W$ (after normalization) represent topics (a topic
-is represented as the distribution over vocabulary), and a column of $H$ shows the topics a document covered. This is similar
-to latent Dirichlet allocation (LDA) analysis, except that NMF cannot guarantee that all the columns of $H$ sum up to 1 
-(probability distribution).
-
 ## Install
+
 ```{r, echo = TRUE, eval = FALSE}
 # from CRAN
 install.packages('NNLM');
@@ -52,7 +43,50 @@ library(devtools);
 install_github('linxihui/NNLM')
 ```
 
-## A simple example: Non-small Cell Lung Cancer expression data
+
+## Applications
+
+NMF has been widely used in many area to discover hidden features.
+
+### Text mining
+
+In text mining, such as topic discovery, NMF is used to group documents into topics, where
+$A$ is a bag-of-word representation (count of a word in a document) of a batch of documents,
+with _rows = vocabulary_, and _columns = documents_.  In NMF, the columns of $W$ (after normalization) represent topics (a topic
+is represented as the distribution over vocabulary), and a column of $H$ shows the topics a document covered. This is similar
+to latent Dirichlet allocation (LDA) analysis, except that NMF cannot guarantee that all the columns of $H$ sum up to 1 
+(probability distribution).
+
+### Meta-genes
+
+In bioinformatics, NMF can be used to discover 'meta-genes' from expression profile, which are linear combinations of genes that
+may or may not related to some biology path ways.  In this case, $A$ is usually arranged as _rows = genes_ and _columns = patients_.
+The columns of $W$ can then be interpreted as meta-genes, and $H$ are said to be the expression profile of meta-genes.
+
+### Tumour content deconvolution
+
+In micro-array data, the mRNA profile (tumour profile) is typically a mixture of 
+cancer specific profile and healthy profile. In NMF, it can be viewed as
+$$ A = W H + W_0 H_1,$$
+where $W$ is unknown cancer profile, and $W_0$ is known healthy profile. The task here is
+to de-convolute $W$, $H$ and $H_1$ from $A$ and $W_0$. 
+
+
+A more general deconvolution task can be expressed as
+$$ A = W H + W_0 H_1 + W_1 H_0,$$
+where $H_0$ is known coefficient matrix, e.g. a column matrix of 1. In this scenario,
+$W_1$ can be interpreted as _homogeneous_ cancer profile within the specific cancer patients,
+and $W$ is _heterogeneous_ cancer profile of interest for downstream analysis, such as
+diagnostic or prognostic capacity, sub-type clustering.
+
+
+This general deconvolution is implemented in `nnmf` via the alternating NNLS algorithm. 
+The known profile $W_0$ and $H_0$ can be passed via arguments `W0` and `H0`. $L_2$ and $L_1$
+constrain for unknown matrices are also supported.
+
+
+## Example 1: Non-small Cell Lung Cancer expression data
+
 ```{r nsclc, fig.show = 'hold', message = TRUE}
 library(NNLM);
 
@@ -79,3 +113,53 @@ newH <- predict(decomp, nsclc[, 81:100], which = 'H', show.progress = FALSE)
 str(newH)
 ```
 
+## Example 2: simulated deconvolution
+
+```{r deconvol, message = TRUE}
+# set up matrix
+n <- 1000; m <- 200;
+k <- 5; k1 <- 2; k2 <- 1;
+
+set.seed(123);
+W <- matrix(runif(n*k), n, k); # unknown heterogeneous cancer profile
+H <- matrix(runif(k*m), k, m);
+W0 <- matrix(runif(n*k1), n, k1); # known healthy profile
+H1 <- matrix(runif(k1*m), k1, m);
+W1 <- matrix(runif(n*k2), n, k2); # unknown common cancer profile
+H0 <- matrix(1, k2, m);
+noise <- 0.01*matrix(runif(n*m), n, m);
+
+# A is the observed profile to be de-convoluted
+A <- W %*% H + W0 %*% H1 + W1 %*% H0 + noise;
+
+deconvol <- nnmf(A, k = 5, W0 = W0, H0 = H0);
+```
+
+Check if $W$ and $H$, our main interest, are recovered.
+
+```{r deconvol2, message = TRUE}
+round(cor(W, deconvol$W), 2);
+round(cor(t(H), t(deconvol$H)), 2);
+```
+
+We see that $W$, $H$ are just permuted. However, as we known that
+the minimization problem for NMF usually has not unique solutions
+for $W$ and $H$. Therefore, $W$ and $H$ cannot be always recovered
+(different only with a permutation and a scaling).
+
+```{r deconvol3, message = TRUE}
+permutation <- c(3, 1, 5, 2, 4);
+round(cor(W, deconvol$W[, permutation]), 2);
+round(cor(t(H), t(deconvol$H[permutation, ])), 2);
+```
+
+
+As from the following result, $H_1$, coefficients of health profile and
+$W_1$, common cancer profile, are recovered fairly well.
+
+```{r deconvol4, message = TRUE}
+round(cor(t(H1)), 2);
+round(cor(t(H1), t(deconvol$H1)), 2);
+
+round(cor(W1, deconvol$W1), 2);
+```

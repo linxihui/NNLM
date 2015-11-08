@@ -1,12 +1,16 @@
 context("Test non-negative matrix factorization.");
 
 test_that("Test NMF using nnls", {
-	set.seed(987);
-	W <- matrix(runif(90), 30);
-	H <- matrix(runif(15), 3);
+	n <- 50; m <- 10;
+	k <- 3; k1 <- 2; k2 <- 1;
 
+	set.seed(987);
+	W <- matrix(runif(n*k), n, k);
+	H <- matrix(runif(k*m), k, m);
 	A <- W %*% H;
-	A.nnmf <- nnmf(A, 3, max.iter = 10000L, rel.tol=1e-6);
+
+	set.seed(123);
+	A.nnmf <- nnmf(A, k, max.iter = 10000L, rel.tol=1e-6);
 
 	expect_true(all(A.nnmf$W >= 0));
 	expect_true(all(A.nnmf$H >= 0));
@@ -14,8 +18,22 @@ test_that("Test NMF using nnls", {
 	expect_equal(dimnames(A.nnmf$W), NULL);
 	expect_equal(dimnames(A.nnmf$H), NULL);
 
-	dimnames(A) <- list(paste0('R', 1:nrow(A)), paste0('C', 1:ncol(A)));
+	set.seed(123);
+	A.nnmf11 <- nnmf(A, k, W0 = matrix(0, nrow(A), 0), H0 = matrix(0, 0, ncol(A)), max.iter = 10000L, rel.tol=1e-6);
+	expect_identical(A.nnmf[c('W', 'H', 'error')], A.nnmf11[c('W', 'H', 'error')]);
 
+	W1 <- matrix(runif(n*k1), n, k1);
+	H1 <- matrix(runif(k1*m), k1, m);
+	W2 <- matrix(runif(n*k2), n, k2);
+	H2 <- matrix(1, k2, m);
+
+	A2 <- A + W1 %*% H1 + W2 %*% H2;
+	A2.nnmf <- nnmf(A2, k, W0 = W1, H0 = H2, max.iter = 10000L, rel.tol=1e-6);
+	expect_true(max(abs(cor(t(H1), t(A2.nnmf$H1)) - cor(t(H1)))) < 0.05);
+	expect_true(abs(cor(W2, A2.nnmf$W1) - 1) < 0.05);
+
+
+	dimnames(A) <- list(paste0('R', 1:nrow(A)), paste0('C', 1:ncol(A)));
 	A.nnmf2 <- nnmf(A, 2, eta = 0.1, beta = 0.01);
 	print(A.nnmf2)
 	plot(A.nnmf2)
@@ -26,7 +44,7 @@ test_that("Test NMF using nnls", {
 	expect_warning(nnmf(A, 2, eta = 0.1, beta = 0, max.iter = 10L), 
 		'Target tolerence not reached. Try a larger max.iter.');
 
-	expect_error(nnmf(A, 10));
+	expect_error(nnmf(A, 20));
 
 	expect_equal(dimnames(A.nnmf2$W), list(rownames(A), NULL));
 	expect_equal(dimnames(A.nnmf2$H), list(NULL, colnames(A)));
@@ -50,7 +68,7 @@ test_that("Test NMF using Brunet' multiplicative update", {
 
 	dimnames(A) <- list(paste0('R', 1:6), paste0('C', 1:5));
 	A.nnmf2 <- nnmf(A, 2, 'brunet');
-	W.new <- predict(A.nnmf2, A[1:4, ], which = 'W')
+	W.new <- predict(A.nnmf2, A[1:4, ], which = 'W', show.warning = FALSE)
 
 	expect_equal(dimnames(A.nnmf2$W), list(rownames(A), NULL));
 	expect_equal(dimnames(A.nnmf2$H), list(NULL, colnames(A)));
