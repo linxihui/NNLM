@@ -1,0 +1,20 @@
+NNLM-0.2.0: 2015-11-08
+======================
+
+- NMF with partially known profiles, which can be used for 
+	tumour content deconvolution with known healty profile
+- Updated vignette
+
+NNLM-0.0.2: 2015-11-04
+======================
+
+- OpenMP support for multiple threading
+- Added progression bar
+- Added a vignette
+
+NNLM-0.0.2: 2015-10-31
+======================
+
+- A very fast non-negative least sequare solver `nnls`
+- Non-negative matrix factorization using alternativing NNLS and brunet
+- Predict new coefficients from known profile descovered from NMF (`nnmf`)
