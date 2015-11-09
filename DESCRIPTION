@@ -4,8 +4,8 @@ Title: Fast solvers for non-negative least square (NNLS) and non-negative matrix
 Description: This is a package for Non-Negative Linear Models. It implements a
     fast sequential coordinate descent algorithm for non-negative least square (NNLS)
     and two fast algorithms for non-negative matrix factorization.
-Version: 0.1.0
-Date: 2015-11-04
+Version: 0.2.0
+Date: 2015-11-08
 Authors@R: person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre"))
 Depends:
     R (>= 3.0.1)

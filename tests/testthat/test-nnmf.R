@@ -20,7 +20,7 @@ test_that("Test NMF using nnls", {
 
 	set.seed(123);
 	A.nnmf11 <- nnmf(A, k, W0 = matrix(0, nrow(A), 0), H0 = matrix(0, 0, ncol(A)), max.iter = 10000L, rel.tol=1e-6);
-	expect_identical(A.nnmf[c('W', 'H', 'error')], A.nnmf11[c('W', 'H', 'error')]);
+	expect_equal(A.nnmf[c('W', 'H', 'error')], A.nnmf11[c('W', 'H', 'error')]);
 
 	W1 <- matrix(runif(n*k1), n, k1);
 	H1 <- matrix(runif(k1*m), k1, m);
