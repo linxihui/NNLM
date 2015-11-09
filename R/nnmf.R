@@ -142,7 +142,7 @@ nnmf <- function(
 check.input.matrix <- function(A) {
 	input.name <- as.character(substitute(A));
 	if (!is.matrix(A)) A <- as.matrix(A);
-	if (!is.null(A)) stop(sprintf("Matrix %s must be numeric", input.name));
+	if (!is.numeric(A)) stop(sprintf("Matrix %s must be numeric", input.name));
 	if (any(A < 0)) stop(sprintf("Matrix %s must be non-negative.", input.name));
 	if (anyNA(A)) stop(sprintf("Matrix %s contains missing values.", input.name));
 	return(NULL);
