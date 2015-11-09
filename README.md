@@ -21,7 +21,7 @@ In addition. `nnls` is parallelled via openMP for even better performance.
 
 This package includes two main functions, `nnls` and `nnmf`.  `nnls` solves the following non-negative least square(NNLS)
 <p align="center">
-argmin||y - x β||₂, s.t., β > 0
+argmin||y - x β||₂, s.t., β ≥ 0
 </p>
 where subscript 2 indicates the Frobenius normal of a matrix, analogous to the L₂ normal of a vector. 
 While `nnmf` solves a non-negative
