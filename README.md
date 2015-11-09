@@ -27,9 +27,9 @@ where subscript 2 indicates the Frobenius normal of a matrix, analogous to the L
 While `nnmf` solves a non-negative
 matrix factorization problem like
 <p align="center">
-argmin ||A - WH||₂² + η ||W||₂² + β Σ_{j=1}^m ||h_j||₁², s.t. W ≥ 0, H ≥ 0
+argmin ||A - WH||₂² + η ||W||₂² + β Σ||h||₁², s.t. W ≥ 0, H ≥ 0
 </p>
-where `m` is the number of columns of `A`, `h_j` is the j-th column of `H`. Here `η` can used to 
+where `h` represents each column of `H`. Here `η` can used to 
 control magnitude of `W` and `β` is for both magnitude and sparsity of matrix `H`.
 
 
