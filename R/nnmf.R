@@ -89,6 +89,8 @@ nnmf <- function(
 					PACKAGE = 'NNLM'
 					)
 				} else {
+					if (is.null(W0)) W0 <- matrix(0., nrow(A), 0);
+					if (is.null(H0)) H0 <- matrix(0., 0, ncol(A));
 					.Call('NNLM_nmf_partial', 
 					A, W0, t(H0), as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
 					as.double(rel.tol), as.integer(n.threads), as.logical(show.progress), as.logical(show.warning),
