@@ -7,15 +7,15 @@ This is a package for Non-Negative Linear Models. It implements a
 fast sequential coordinate descent algorithm (`nnls`) for non-negative least square (NNLS)
 and two fast algorithms for non-negative matrix factorization(`nnmf`).
 
-The function `nnls` in R package [`nnls`](https://cran.r-project.org/web/packages/nnls/index.html)
+The function `nnls` in R package [nnls](https://cran.r-project.org/web/packages/nnls/index.html)
 implemented Lawson-Hanson algorithm in Fortran for the above NNLS problem.
 However the Lawson-Hanson algorithm is too slow to be embedded to solve other problems like NMF.
 The `nnls` function in this package is implemented in C++, using a coordinate-wise descent algorithm,
 which has been shown to be much faster.  `nnmf` is a non-negative matrix factorization solver
 using alternating NNLS and Brunet's multiplicative updates,
 which are both implemented in C++ too. Due to the fast `nnls`, `nnmf` is way faster
-than the standard R package [`NMF`](https://cran.r-project.org/web/packages/NMF/index.html). 
-Thus `NNLM` is a package more suitable for larger data sets and bigger hidden features (rank).  
+than the standard R package [NMF](https://cran.r-project.org/web/packages/NMF/index.html). 
+Thus NNLM is a package more suitable for larger data sets and bigger hidden features (rank).  
 In addition. `nnls` is parallelled via openMP for even better performance.
 
 
