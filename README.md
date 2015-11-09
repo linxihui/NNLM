@@ -21,12 +21,13 @@ In addition. `nnls` is parallelled via openMP for even better performance.
 
 This package includes two main functions, `nnls` and `nnmf`.  `nnls` solves the following non-negative least square(NNLS)
 <p align="center">
-argmin||y - x β||\_F, s.t., β > 0
+argmin||y - x β||₂, s.t., β > 0
 </p>
-where F is the Frobenius normal of a matrix, analogous to the L2 normal of a vector. While `nnmf` solves a non-negative
+where subscript 2 indicates the Frobenius normal of a matrix, analogous to the L₂ normal of a vector. 
+While `nnmf` solves a non-negative
 matrix factorization problem like
 <p align="center">
-argmin\_{W ≥ 0, H ≥ 0} ||A - WH||²\_F + η ||W||²\_F + β Σ\_{j=1}^m ||h\_j||₁²
+argmin ||A - WH||₂² + η ||W||₂² + β Σ_{j=1}^m ||h_j||₁², s.t. W ≥ 0, H ≥ 0
 </p>
 where `m` is the number of columns of `A`, `h_j` is the j-th column of `H`. Here `η` can used to 
 control magnitude of `W` and `β` is for both magnitude and sparsity of matrix `H`.
