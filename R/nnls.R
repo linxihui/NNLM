@@ -11,7 +11,7 @@
 #' @param n.threads     An integer number of threads/CPUs to use. Default to 1 (no parallel). Use 0 for all cores
 #' @param show.progress TRUE/FALSE indicating if to show a progress bar
 #' @return A list of with components \itemize{
-#' 	\item{coefficients: } {A matrix or vector (depend on y) of the NNLS solution beta}
+#' 	\item{coefficients: } {a matrix or vector (depend on y) of the NNLS solution beta}
 #' 	\item{iteration: }{a vector of numbers of iterations for each column of y}
 #' 	\item{abs.err: }{a vector of absolute error, i.e., difference between two successive iterations, for each column of y}
 #' 	\item{rel.err: }{a vector of relative error, i.e., relative difference between two successive iterations, for each column of y}
