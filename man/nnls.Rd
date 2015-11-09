@@ -24,7 +24,7 @@ nnls(x, y, check.x = TRUE, max.iter = 10000L, rel.tol = 1e-04,
 }
 \value{
 A list of with components \itemize{
-	\item{coefficients: } {A matrix or vector (depend on y) of the NNLS solution beta}
+	\item{coefficients: } {a matrix or vector (depend on y) of the NNLS solution beta}
 	\item{iteration: }{a vector of numbers of iterations for each column of y}
 	\item{abs.err: }{a vector of absolute error, i.e., difference between two successive iterations, for each column of y}
 	\item{rel.err: }{a vector of relative error, i.e., relative difference between two successive iterations, for each column of y}

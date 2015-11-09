@@ -8,7 +8,7 @@
 #' @param rel.tol       Stop criterion, relative difference of target_error between two successive iterations
 #' @param n.threads     An integer number of threads/CPUs to use. Default to 1(no parallel). Use 0 for all cores
 #' @param show.progress TRUE/FALSE indicating if to show a progress bar
-#' @param show.warning  If to show warnings when targetted \code{rel.tol} is not reached
+#' @param show.warning  If to show warnings when targeted \code{rel.tol} is not reached
 #' @param ...           Further arguments passed to 'print', 'plot' or 'heatmap'
 #' @return \itemize{
 #' 	\item{predict: }{\code{W} or \code{H} for newdata given pre-computed H or W if \code{W0} and \code{H0} are NULL, else a list of \code{W, W1} or \code{H, H1}}

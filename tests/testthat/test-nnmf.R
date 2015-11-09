@@ -42,7 +42,7 @@ test_that("Test NMF using nnls", {
 	W.new <- predict(A.nnmf2, A[1:4, ], which = 'W')
 
 	expect_warning(nnmf(A, 2, eta = 0.1, beta = 0, max.iter = 10L), 
-		'Target tolerence not reached. Try a larger max.iter.');
+		'Target tolerance not reached. Try a larger max.iter.');
 
 	expect_error(nnmf(A, 20));
 
@@ -75,8 +75,8 @@ test_that("Test NMF using Brunet' multiplicative update", {
 	expect_equal(dimnames(W.new), list(rownames(A[1:4, ]), NULL));
 
 	expect_warning(nnmf(A, 2, 'b', max.iter = 5L),
-		'Target tolerence not reached. Try a larger max.iter.');
+		'Target tolerance not reached. Try a larger max.iter.');
 
 	expect_warning(predict(A.nnmf2, A[, 1:2], max.iter = 2, which = 'H'),
-		'Target tolerence not reached. Try a larger max.iter.');
+		'Target tolerance not reached. Try a larger max.iter.');
 	})

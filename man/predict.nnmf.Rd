@@ -32,7 +32,7 @@
 
 \item{show.progress}{TRUE/FALSE indicating if to show a progress bar}
 
-\item{show.warning}{If to show warnings when targetted \code{rel.tol} is not reached}
+\item{show.warning}{If to show warnings when targeted \code{rel.tol} is not reached}
 
 \item{...}{Further arguments passed to 'print', 'plot' or 'heatmap'}
 

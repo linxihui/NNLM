@@ -76,7 +76,7 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 	}
 
 	if (show_warning && max_iter <= i)
-		Rcpp::warning("Target tolerence not reached. Try a larger max.iter.");
+		Rcpp::warning("Target tolerance not reached. Try a larger max.iter.");
 
 	err.resize(i < max_iter ? i+1 : max_iter);
 	pen_err.resize(err.n_elem);

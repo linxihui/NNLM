@@ -2,7 +2,7 @@
 
 inline void update_WtW(mat & WtW, const mat & W, const mat & W1)
 {
-	// (W, W1)^T (W, W1)
+	// compute WtW = (W, W1)^T (W, W1)
 	int k = W.n_cols;
 	if (W1.empty())
 		WtW = W.t()*W;
@@ -18,6 +18,7 @@ inline void update_WtW(mat & WtW, const mat & W, const mat & W1)
 
 inline void update_WtW(mat & WtW, const mat & W, const mat & W1, const mat & H2)
 {
+	// compute WtW = (W[:, 0:k-1], W1)^T (W[:, 0:k-1], W1)
 	if (H2.empty())
 		update_WtW(WtW, W, W1);
 	else
@@ -29,7 +30,7 @@ inline void update_WtW(mat & WtW, const mat & W, const mat & W1, const mat & H2)
 
 inline void update_WtA(mat & WtA, const mat & W, const mat & W1, const mat & A)
 {
-	// (W, W1)^T A
+	// compute WtA  = (W, W1)^T A
 	int k = W.n_cols;
 	if (W1.empty())
 		WtA = -W.t()*A;
@@ -42,6 +43,7 @@ inline void update_WtA(mat & WtA, const mat & W, const mat & W1, const mat & A)
 
 inline void update_WtA(mat & WtA, const mat & W, const mat & W1, const mat & H2, const mat & A)
 {
+	// compute WtA = (W[:, 0:k-1], W1)^T (A - W[, k:end] H2^T)
 	if (H2.empty()) 
 		update_WtA(WtA, W, W1, A);
 	else
@@ -68,7 +70,33 @@ inline double mse(const mat & A, const mat & W, const mat & H, const mat & W1, c
 Rcpp::List nmf_partial(const mat & A, const mat & W1, const mat & H2, int k, double eta, double beta, 
 	int max_iter, double tol, int n_threads, bool show_progress, bool show_warning)
 {
-	// A = [w w1 w2] [h h1 h2]^T
+	/*
+	 * Description
+	 * 	Decompose A such that
+	 * 		A = [W W1 W2] [H H1 H2]^T
+	 * 	where W1 and H2 are known
+	 * Input
+	 * 	A             : matrix to be decomposed
+	 * 	W1, H2        : known profile
+	 * 	k             : rank or cols of W
+	 * 	eta           : L2 constraint on W, W2
+	 * 	beta          : L1 constraint on H, H1
+	 * 	max_iter      : maximum number of iteration
+	 * 	tol           : relative tolerance between two successive iterations
+	 * 	n_threads     : number of threads (openMP)
+	 * 	show_progress : if to show progress, useful for long computation
+	 * 	show_warning  : if to show warning if targeted `tol` is not reached
+	 * Output
+	 * 	A list (Rcpp::List) of W = [W, W2] and H = [H, H1]^T, iteration, 
+	 * 	error and target_error (with constrain)
+	 * Methods
+	 * 	Apply `nnls_solver` to [W, W2] (fixed others) and [H, H1] (fixed othes) alternatively.
+	 * Author 
+	 * 	Eric Xihui Lin <xihuil.silence@gmail.com>
+	 * Version
+	 * 	2015-11-08
+	 */
+
 	int n = A.n_rows, m = A.n_cols, kW = W1.n_cols, kH = H2.n_cols;
 	int nW = k+kH, nH = k+kW;
 	mat W(A.n_rows, nW); //W = [w w2]
@@ -138,7 +166,7 @@ Rcpp::List nmf_partial(const mat & A, const mat & W1, const mat & H2, int k, dou
 	}
 
 	if (max_iter <= i && show_warning)
-		Rcpp::warning("Target tolerence not reached. Try a larger max.iter.");
+		Rcpp::warning("Target tolerance not reached. Try a larger max.iter.");
 
 	err.resize(i < max_iter ? i+1 : max_iter);
 	pen_err.resize(err.n_elem);

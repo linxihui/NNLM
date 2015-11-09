@@ -5,13 +5,13 @@
 #' The problem of non-negative matrix factorization is to find \code{W, H, W_1, H_1}, such that \cr
 #' 		\deqn{A = W H + W_0 H_1 + W_1 H_0 + noise,}\cr
 #' where \eqn{W_0}, \eqn{H_0} are known matrices, which are NULLs in most application case. 
-#' In tumour content decovolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
+#' In tumour content deconvolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
 #' is desired pure cancer profile. One also set \eqn{H_0} to a row matrix of 1, and thus \eqn{W_1}
 #' can be treated as common profile among samples.
 #'
-#' To simpliyf the notations, we denote right hand side of the above equaiton as \eqn{W H}. 
+#' To simplify the notations, we denote right hand side of the above equation as \eqn{W H}. 
 #' The problem to solved using square error is\cr
-#' 	  \deqn{argmin_{W \ge 0, H \ge 0} ||A - W H||_2^2 + \eta*||W||_F^2 + \beta*\sum{j=1}^m (||H_j||_1^2),}\cr
+#' 	  \deqn{argmin_{W \ge 0, H \ge 0} ||A - W H||_2^2 + \eta*||W||_F^2 + \beta*\sum_{j=1}^m (||H_j||_1^2),}\cr
 #' where \eqn{H_j} is the j-th column of \eqn{H}. This minimization problem is solved by apply 
 #' \code{\link{nnls}} to W and H alternatively, when \code{method == 'nnls'},
 #' which is implemented using sequential coordinate descend methods. 
@@ -29,11 +29,11 @@
 #' @param beta          L1 penalty on the right (H). Default to no penalty. Effective only when \code{method = 'nnls'}
 #' @param max.iter      Maximum iteration of alternating NNLS solutions to H and W
 #' @param rel.tol       Stop criterion, relative difference of target_error between two successive iterations
-#' @param check.k       If to check whether k <= n*m/(n+m), where (n,m)=dim(A). Default to TRUE, but it can be slow
+#' @param check.k       If to check whether k <= n*m/(n+m), where (n,m)=dim(A)
 #' @param n.threads     An integer number of threads/CPUs to use. Default to 1(no parallel). Specify 0 for all cores
 #' @param show.progress TRUE/FALSE indicating if to show a progress bar
-#' @param show.warning  If to show warnings when targetted \code{rel.tol} is not reached
-#' @return A list with compenents
+#' @param show.warning  If to show warnings when targeted \code{rel.tol} is not reached
+#' @return A list with components
 #' 	\itemize{
 #' 		\item{W:}{ left/base matrix W}
 #' 		\item{H:}{ right/coefficient matrix H}
@@ -59,12 +59,15 @@ nnmf <- function(
 	) {
 	method = match.arg(method);
 	check.input.matrix(A);
+	if (!is.double(A)) storage.mode(A) <- 'double';
 	if (!is.null(W0)) {
 		check.input.matrix(W0);
+		if (!is.double(W0)) storage.mode(W0) <- 'double';
 		if (nrow(W0) != nrow(A)) stop("Rows of A and W0 must match.");
 		}
 	if (!is.null(H0)) {
 		check.input.matrix(H0);
+		if (!is.double(H0)) storage.mode(H0) <- 'double';
 		if (ncol(H0) != ncol(A)) stop("Columns of A and H0 must match.");
 		}
 	if (check.k && k > min(dim(A))) 
@@ -132,14 +135,14 @@ nnmf <- function(
 	}
 
 
-# check if input is a matrix of doubles, non-negative and no-missing
+# check if input is a matrix, non-negative and no-missing
 #
 # @param A Input matrix to be check
 # @return NULL
 check.input.matrix <- function(A) {
 	input.name <- as.character(substitute(A));
 	if (!is.matrix(A)) A <- as.matrix(A);
-	if (!is.double(A)) storage.mode(A) <- 'double';
+	if (!is.null(A)) stop(sprintf("Matrix %s must be numeric", input.name));
 	if (any(A < 0)) stop(sprintf("Matrix %s must be non-negative.", input.name));
 	if (anyNA(A)) stop(sprintf("Matrix %s contains missing values.", input.name));
 	return(NULL);
