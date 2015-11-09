@@ -20,16 +20,16 @@ In addition. `nnls` is parallelled via openMP for even better performance.
 
 
 This package includes two main functions, `nnls` and `nnmf`.  `nnls` solves the following non-negative least square(NNLS)
-</br>
-argmin||y - x beta||\_F, s.t., beta > 0
-</br>
+<p align="center">
+argmin||y - x β||\_F, s.t., β > 0
+</p>
 where F is the Frobenius normal of a matrix, analogous to the L2 normal of a vector. While `nnmf` solves a non-negative
 matrix factorization problem like
-</br>
-argmin\_{W \ge 0, H \ge 0} ||A - WH||\_F^2 + \eta ||W||\_F^2 + \beta \sum\_{j=1}^m ||h\_j||\_1^2
-</br>
-where `m` is the number of columns of `A`, `h_j` is the j-th column of `H`. Here `\eta` can used to 
-control magnitude of `W` and `\beta` is for both magnitude and sparsity of matrix `H`.
+<p align="center">
+argmin\_{W ≥ 0, H ≥ 0} ||A - WH||²\_F + η ||W||²\_F + β Σ\_{j=1}^m ||h\_j||₁²
+</p>
+where `m` is the number of columns of `A`, `h_j` is the j-th column of `H`. Here `η` can used to 
+control magnitude of `W` and `β` is for both magnitude and sparsity of matrix `H`.
 
 
 # Install
@@ -104,25 +104,25 @@ str(newH)
 
 In micro-array data, the mRNA profile (tumour profile) is typically a mixture of 
 cancer specific profile and healthy profile. In NMF, it can be viewed as
-</br>
-A = W H + W\_0 H\_1,
-</br>
-where `W` is unknown cancer profile, and `W_0` is known healthy profile. The task here is
-to de-convolute `W`, `H` and `H_1` from `A` and `W_0`. 
+<p align="center">
+A = W H + W₀ H₁,
+</p>
+where `W` is unknown cancer profile, and `W₀` is known healthy profile. The task here is
+to de-convolute `W`, `H` and `H₁` from `A` and `W₀`. 
 
 
 A more general deconvolution task can be expressed as
-</br>
-A = W H + W\_0 H\_1 + W\_1 H\_0,
-</br>
-where `H_0` is known coefficient matrix, e.g. a column matrix of 1. In this scenario,
-`W_1` can be interpreted as _homogeneous_ cancer profile within the specific cancer patients,
+<p align="center">
+A = W H + W₀ H₁ + W₁ H₀,
+</p>
+where `H₀` is known coefficient matrix, e.g. a column matrix of 1. In this scenario,
+`W₁` can be interpreted as _homogeneous_ cancer profile within the specific cancer patients,
 and `W` is _heterogeneous_ cancer profile of interest for downstream analysis, such as
 diagnostic or prognostic capacity, sub-type clustering.
 
 
 This general deconvolution is implemented in `nnmf` via the alternating NNLS algorithm. 
-The known profile `W_0` and `H_0` can be passed via arguments `W0` and `H0`. `L_2` and `L_1`
+The known profile `W₀` and `H₀` can be passed via arguments `W0` and `H0`. `L₂` and `L₁`
 constrain for unknown matrices are also supported.
 
 
@@ -151,7 +151,7 @@ deconvol <- nnmf(A, k = 5, W0 = W0, H0 = H0);
 ## reached. Try a larger max.iter.
 ```
 
-Check if $W$ and $H$, our main interest, are recovered.
+Check if `W` and `H`, our main interest, are recovered.
 
 
 ```r
@@ -180,9 +180,9 @@ round(cor(t(H), t(deconvol$H)), 2);
 ## [5,]  0.09 -0.01  0.11  1.00  0.11
 ```
 
-We see that $W$, $H$ are just permuted. However, as we known that
+We see that `W`, `H` are just permuted. However, as we known that
 the minimization problem for NMF usually has not unique solutions
-for $W$ and $H$. Therefore, $W$ and $H$ cannot be guaranteed to
+for `W` and `H`. Therefore, `W` and `H` cannot be guaranteed to
 be recovered exactly(different only with a permutation and a scaling).
 
 
@@ -214,8 +214,8 @@ round(cor(t(H), t(deconvol$H[permutation, ])), 2);
 ```
 
 
-As from the following result, $H_1$, coefficients of health profile and
-$W_1$, common cancer profile, are recovered fairly well.
+As from the following result, `H₁`, coefficients of health profile and
+`W₁`, common cancer profile, are recovered fairly well.
 
 
 ```r
