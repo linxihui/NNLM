@@ -122,6 +122,10 @@ Rcpp::List nmf_partial(const mat & A, const mat & W1, const mat & H2, int k, dou
 	// check progression
 	Progress prgrss(max_iter, show_progress);
 
+	// iterations and tolerance of internal nnls_solver
+	int nnls_max_iter = 500;
+	double nnls_tol = tol > 1e-4 ? 1e-5 : tol/10.0;
+
 	mat WtW(nH, nH); // known [w w1], get [h h1]
 	mat WtA(nH, m);
 	mat HtH(nW, nW); // known [h h2], get [w w2]
@@ -132,7 +136,7 @@ Rcpp::List nmf_partial(const mat & A, const mat & W1, const mat & H2, int k, dou
 	update_WtA(WtA, W, W1, H2, A);
 
 	if (beta > 0) WtW += beta;
-	H = nnls_solver(WtW, WtA, max_iter, tol, n_threads).t();
+	H = nnls_solver(WtW, WtA, nnls_max_iter, nnls_tol, n_threads).t();
 
 	prgrss.increment();
 
@@ -147,13 +151,13 @@ Rcpp::List nmf_partial(const mat & A, const mat & W1, const mat & H2, int k, dou
 		update_WtW(HtH, H, H2, W1);
 		update_WtA(HtAt, H, H2, W1, A.t());
 		if (eta > 0) HtH.diag() += eta;
-		W = nnls_solver(HtH, HtAt, max_iter*(1+i), tol/(1+i), n_threads).t();
+		W = nnls_solver(HtH, HtAt, nnls_max_iter, nnls_tol, n_threads).t();
 
 		// solve H = [h h1] given [w w1]
 		update_WtW(WtW, W, W1, H2);
 		update_WtA(WtA, W, W1, H2, A);
 		if (beta > 0) WtW += beta;
-		H = nnls_solver(WtW, WtA, max_iter*(1+i), tol/(1+i), n_threads).t();
+		H = nnls_solver(WtW, WtA, nnls_max_iter, nnls_tol, n_threads).t();
 
 		pen_err[i] = mse(A, W, H, W1, H2);
 		err[i] = std::sqrt(pen_err[i]);
@@ -174,7 +178,7 @@ Rcpp::List nmf_partial(const mat & A, const mat & W1, const mat & H2, int k, dou
 	return Rcpp::List::create(
 		Rcpp::Named("W") = W, 
 		Rcpp::Named("H") = H.t(), 
-		Rcpp::Named("error") = arma::sqrt(err),
-		Rcpp::Named("target_error") = arma::sqrt(pen_err)
+		Rcpp::Named("error") = err,
+		Rcpp::Named("target_error") = pen_err
 		);
 }

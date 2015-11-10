@@ -41,14 +41,19 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 	// check progression
 	Progress prgrss(max_iter, show_progress);
 
+	// iterations and tolerance of internal nnls_solver
+	int nnls_max_iter = 500;
+	double nnls_tol = tol > 1e-4 ? 1e-5 : tol/10.0;
+
 	// solve H given W
 	WtW = W.t()*W;
 	if (beta > 0) WtW += beta;
-	H = nnls_solver(WtW, -W.t()*A, max_iter, tol, n_threads);
+	H = nnls_solver(WtW, -W.t()*A, nnls_max_iter, nnls_tol, n_threads);
 	
 	prgrss.increment();
 
 	int i = 0;
+
 	for(; i < max_iter; i++)
 	{
 		Rcpp::checkUserInterrupt();
@@ -58,12 +63,12 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 		// solve W given H
 		HHt = H*H.t();
 		if (eta > 0) HHt.diag() += eta;
-		W = nnls_solver(HHt, -H*A.t(), max_iter*(1+i), tol/(1+i), n_threads).t();
+		W = nnls_solver(HHt, -H*A.t(), nnls_max_iter, nnls_tol, n_threads).t();
 
 		// solve H given W
 		WtW = W.t()*W;
 		if (beta > 0) WtW += beta;
-		H = nnls_solver(WtW, -W.t()*A, max_iter*(1+i), tol/(1+i), n_threads);
+		H = nnls_solver(WtW, -W.t()*A, nnls_max_iter, nnls_tol, n_threads);
 
 		pen_err[i] = mean(mean(square(A - W*H)));
 		err[i] = std::sqrt(pen_err[i]);
@@ -84,8 +89,8 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 	return Rcpp::List::create(
 		Rcpp::Named("W") = W, 
 		Rcpp::Named("H") = H, 
-		Rcpp::Named("error") = arma::sqrt(err),
-		Rcpp::Named("target_error") = arma::sqrt(pen_err)
+		Rcpp::Named("error") = err,
+		Rcpp::Named("target_error") = pen_err
 		);
 }
 
