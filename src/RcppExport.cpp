@@ -93,3 +93,27 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+
+
+// nmf_partial2
+RcppExport SEXP NNLM_nmf_partial2(SEXP ASEXP, SEXP W1SEXP, SEXP H2SEXP, SEXP WmSEXP, SEXP HmSEXP, SEXP kSEXP, SEXP etaSEXP, SEXP betaSEXP, SEXP max_iterSEXP, SEXP tolSEXP, SEXP n_threadsSEXP, SEXP show_progressSEXP, SEXP show_warningSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const mat& >::type W1(W1SEXP);
+    Rcpp::traits::input_parameter< const mat& >::type H2(H2SEXP);
+    Rcpp::traits::input_parameter< umat >::type Wm(WmSEXP);
+    Rcpp::traits::input_parameter< umat >::type Hm(HmSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
+    Rcpp::traits::input_parameter< bool >::type show_progress(show_progressSEXP);
+    Rcpp::traits::input_parameter< bool >::type show_warning(show_warningSEXP);
+    __result = Rcpp::wrap(nmf_partial2(A, W1, H2, Wm, Hm, k, eta, beta, max_iter, tol, n_threads, show_progress, show_warning));
+    return __result;
+END_RCPP
+}
