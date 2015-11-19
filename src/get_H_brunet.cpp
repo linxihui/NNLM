@@ -2,7 +2,7 @@
 
 
 //[[Rcpp::export]]
-mat get_H_brunet(const mat & A, const mat & W,  int max_iter, double tol, int n_threads, bool show_progress, bool show_warning)
+mat get_H_brunet(const mat & A, const mat & W,  int max_iter, double rel_tol, int n_threads, bool show_progress, bool show_warning)
 {
 	/*
 	 * Description:
@@ -35,7 +35,7 @@ mat get_H_brunet(const mat & A, const mat & W,  int max_iter, double tol, int n_
 			Abar += W.col(a) * (H.row(a) - ha);
 		}
 		err.at(i) = accu(A % (arma::trunc_log(A) - arma::trunc_log(Abar)) - A - Abar);
-		if (i > 0 && std::abs(err.at(i) - err.at(i-1))/(std::abs(err.at(i-1)) + 1e-6) < tol)
+		if (i > 0 && std::abs(err.at(i) - err.at(i-1))/(std::abs(err.at(i-1)) + 1e-6) < rel_tol)
 			break;
 	}
 

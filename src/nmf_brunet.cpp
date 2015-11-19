@@ -2,7 +2,7 @@
 
 
 //[[Rcpp::export]]
-Rcpp::List nmf_brunet(const mat & A, int k, int max_iter , double tol, int n_threads, bool show_progress, bool show_warning)
+Rcpp::List nmf_brunet(const mat & A, int k, int max_iter , double rel_tol, int n_threads, bool show_progress, bool show_warning)
 {
 	/* 
 	 * Description: 
@@ -52,7 +52,7 @@ Rcpp::List nmf_brunet(const mat & A, int k, int max_iter , double tol, int n_thr
 		}
 		err.at(i) =  std::sqrt(mean(mean(square(A - Abar))));
 		trgt_err.at(i) = accu(A % (arma::trunc_log(A) - arma::trunc_log(Abar)) - A - Abar);
-		if (i > 0 && std::abs(trgt_err.at(i) - trgt_err.at(i-1))/(std::abs(trgt_err.at(i-1)) + 1e-6) < tol)
+		if (i > 0 && std::abs(trgt_err.at(i) - trgt_err.at(i-1))/(std::abs(trgt_err.at(i-1)) + 1e-6) < rel_tol)
 			break;
 	}
 
