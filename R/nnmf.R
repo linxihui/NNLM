@@ -172,7 +172,7 @@ check.input.matrix <- function(A, check.missing = TRUE) {
 	if (!is.matrix(A)) A <- as.matrix(A);
 	if (!is.numeric(A)) stop(sprintf("Matrix %s must be numeric", input.name));
 	if (!is.double(A)) storage.mode(A) <- 'double';
-	if (any(A < 0)) stop(sprintf("Matrix %s must be non-negative.", input.name));
+	if (any(A[!is.na(A)] < 0)) stop(sprintf("Matrix %s must be non-negative.", input.name));
 	if (check.missing && any(is.na(A))) stop(sprintf("Matrix %s contains missing values.", input.name));
 	return(A);
 	}

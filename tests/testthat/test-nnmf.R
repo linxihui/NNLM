@@ -59,13 +59,14 @@ test_that("Test NMF using nnls", {
 	W[Wm] <- 0;
 	H[Hm] <- 0;
 	A <- W %*% H;
+	A[1, 1] <- NA;
 
 	set.seed(123);
 	A.nnmf <- nnmf(A, k, Wm = Wm, Hm = Hm, max.iter = 10000L, rel.tol=1e-6);
 
 	expect_true(all(A.nnmf$W >= 0));
 	expect_true(all(A.nnmf$H >= 0));
-	expect_equal(with(A.nnmf, W%*%H), A);
+	expect_equal(with(A.nnmf, W%*%H), W %*% H);
 	expect_true(all(A.nnmf$W[Wm] == 0));
 	expect_true(all(A.nnmf$H[Hm] == 0));
 	})
