@@ -25,6 +25,9 @@
 #' @param method        Decomposition algorithms. Options are 'nnls'(default), 'brunet'
 #' @param W0            Known \code{W} (left) profile
 #' @param H0            Known \code{H} (right) profile
+#' @param W.init        Initial matrix of [W, W1]. Sample frome Unif(0,1) if NULL (default)
+#' @param Wm            Masked matrix (logical values) with dimension like [W, W1], s.t. masked entries are fixed to 0. No mask if set to NULL (default)
+#' @param Hm            Masked matrix (logical values) with dimension like [H, H1]^T, s.t. masked entries are fixed to 0. No mask if set to NULL (default)
 #' @param eta           L2 penalty on the left (W). Default to no penalty. If eta < 0 then eta = max(A). Effective only when \code{method = 'nnls'}
 #' @param beta          L1 penalty on the right (H). Default to no penalty. Effective only when \code{method = 'nnls'}
 #' @param max.iter      Maximum iteration of alternating NNLS solutions to H and W
@@ -53,49 +56,72 @@
 #' @export
 nnmf <- function(
 	A, k = 1L, method = c('nnls', 'brunet'), W0 = NULL, H0 = NULL, 
+	W.init = NULL, Wm = NULL, Hm = NULL,
 	eta = 0, beta = 0, max.iter = 500L, rel.tol = 1e-4, 
 	check.k = TRUE, n.threads = 1L, show.progress = TRUE, 
 	show.warning = TRUE
 	) {
 	method = match.arg(method);
-	check.input.matrix(A);
-	if (!is.double(A)) storage.mode(A) <- 'double';
+	A <- check.input.matrix(A, check.missing = FALSE);
+	kW0 <- kH0 <- 0;
 	if (!is.null(W0)) {
-		check.input.matrix(W0);
-		if (!is.double(W0)) storage.mode(W0) <- 'double';
+		W0 <- check.input.matrix(W0);
 		if (nrow(W0) != nrow(A)) stop("Rows of A and W0 must match.");
+		kW0 <- ncol(W0);
 		}
 	if (!is.null(H0)) {
-		check.input.matrix(H0);
-		if (!is.double(H0)) storage.mode(H0) <- 'double';
+		H0 <- check.input.matrix(H0);
 		if (ncol(H0) != ncol(A)) stop("Columns of A and H0 must match.");
+		kH0 <- nrow(H0);
+		}
+	if (!is.null(W.init)) {
+		W.init <- check.input.matrix(W.init);
+		if (any(dim(W.init) != c(nrow(A), k + kW0)))
+			stop("Dimension of W.init is invalid.");
+		}
+	if (!is.null(Wm)) {
+		Wm <- check.input.mask(Wm);
+		if (ncol(Wm) == k && kW0 > 0)
+			Wm <- cbind(Wm, matrix(FALSE, ncol(Wm), kW0));
+		if (any(dim(Wm) != c(nrow(A), k + kW0)))
+			stop("Dimension of Wm is invalid.");
+		}
+	if (!is.null(Hm)) {
+		Hm <- check.input.mask(Hm);
+		if (nrow(Hm) == k && kH0 > 0)
+			Hm <- rbind(Hm, matrix(0, kH0, ncol(Hm)));
+		if (any(dim(Hm) != c(k + kH0, ncol(A))))
+			stop("Dimension of Hm is invalid.");
 		}
 	if (check.k && k > min(dim(A))) 
 		stop("k must not be larger than min(nrow(A), ncol(A))");
 	if (eta < 0) eta <- median(A);
-	if ('brunet' == method && (!is.null(W0) || !is.null(H0)))
-		stop("When W0 or H0 are not NULL, method must be 'nnls'.");
-		
+	if ('brunet' == method && (!is.null(W0) || !is.null(H0) || !is.null(Wm) || !is.null(Hm) || any(is.na(A))))
+		stop("When any of W0, H0, Wm, Hm is not NULL or NA in A, method must be 'nnls'.");
 
 	if (n.threads < 0L) n.threads <- 0L;
 
 	run.time <- system.time(
 		out <- switch(method,
 			'nnls' = {
-				if (is.null(W0) && is.null(H0)) {
+				if (!any(is.na(A)) && all(c(is.null(W0), is.null(H0), is.null(Wm), is.null(Hm)))) {
 					.Call('NNLM_nmf_nnls', 
-					A, as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
-					as.double(rel.tol), as.integer(n.threads), as.logical(show.progress), as.logical(show.warning),
-					PACKAGE = 'NNLM'
-					)
+						A, as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
+						as.double(rel.tol), as.integer(n.threads), as.logical(show.progress), as.logical(show.warning),
+						PACKAGE = 'NNLM'
+						)
 				} else {
-					if (is.null(W0)) W0 <- matrix(0., nrow(A), 0);
-					if (is.null(H0)) H0 <- matrix(0., 0, ncol(A));
-					.Call('NNLM_nmf_partial', 
-					A, W0, t(H0), as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
-					as.double(rel.tol), as.integer(n.threads), as.logical(show.progress), as.logical(show.warning),
-					PACKAGE = 'NNLM'
-					)
+					# transform NULLs to empty matrices
+					if (is.null(W0)) W0 <- matrix(0., 0, 0);
+					if (is.null(H0)) H0 <- matrix(0., 0, 0);
+					if (is.null(W.init)) W.init <- matrix(0., 0, 0);
+					if (is.null(Wm)) Wm <- matrix(0., 0, 0);
+					if (is.null(Hm)) Hm <- matrix(0., 0, 0);
+					.Call('NNLM_nnmf_generalized', 
+						A, W0, t(H0), W.init, Wm, t(Hm), as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
+						as.double(rel.tol), as.integer(n.threads), as.logical(show.progress), as.logical(show.warning), 
+						500L, 1e-6, FALSE, PACKAGE = 'NNLM'
+						)
 					}
 				},
 			'brunet' = .Call('NNLM_nmf_brunet', 
@@ -140,12 +166,25 @@ nnmf <- function(
 # check if input is a matrix, non-negative and no-missing
 #
 # @param A Input matrix to be check
-# @return NULL
-check.input.matrix <- function(A) {
+# @return A properly modified matrix
+check.input.matrix <- function(A, check.missing = TRUE) {
 	input.name <- as.character(substitute(A));
 	if (!is.matrix(A)) A <- as.matrix(A);
 	if (!is.numeric(A)) stop(sprintf("Matrix %s must be numeric", input.name));
+	if (!is.double(A)) storage.mode(A) <- 'double';
 	if (any(A < 0)) stop(sprintf("Matrix %s must be non-negative.", input.name));
-	if (anyNA(A)) stop(sprintf("Matrix %s contains missing values.", input.name));
-	return(NULL);
+	if (check.missing && any(is.na(A))) stop(sprintf("Matrix %s contains missing values.", input.name));
+	return(A);
+	}
+
+# check if input is a mask matrix, non-negative and no-missing
+#
+# @param A Input matrix to be check
+# @return A properly modified matrix
+check.input.mask <- function(A) {
+	input.name <- as.character(substitute(A));
+	if (!is.matrix(A)) A <- as.matrix(A);
+	if (!is.logical(A)) storage.mode(A) <- 'logical';
+	if (any(is.na(A))) stop(sprintf("Matrix %s contains missing values.", input.name));
+	return(A);
 	}

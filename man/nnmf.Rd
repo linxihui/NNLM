@@ -5,8 +5,9 @@
 \title{Non-negative matrix factorization}
 \usage{
 nnmf(A, k = 1L, method = c("nnls", "brunet"), W0 = NULL, H0 = NULL,
-  eta = 0, beta = 0, max.iter = 500L, rel.tol = 1e-04, check.k = TRUE,
-  n.threads = 1L, show.progress = TRUE, show.warning = TRUE)
+  W.init = NULL, Wm = NULL, Hm = NULL, eta = 0, beta = 0,
+  max.iter = 500L, rel.tol = 1e-04, check.k = TRUE, n.threads = 1L,
+  show.progress = TRUE, show.warning = TRUE)
 }
 \arguments{
 \item{A}{A matrix to be decomposed}
@@ -18,6 +19,12 @@ nnmf(A, k = 1L, method = c("nnls", "brunet"), W0 = NULL, H0 = NULL,
 \item{W0}{Known \code{W} (left) profile}
 
 \item{H0}{Known \code{H} (right) profile}
+
+\item{W.init}{Initial matrix of [W, W1]. Sample frome Unif(0,1) if NULL (default)}
+
+\item{Wm}{Masked matrix (logical values) with dimension like [W, W1], s.t. masked entries are fixed to 0. No mask if set to NULL (default)}
+
+\item{Hm}{Masked matrix (logical values) with dimension like [H, H1]^T, s.t. masked entries are fixed to 0. No mask if set to NULL (default)}
 
 \item{eta}{L2 penalty on the left (W). Default to no penalty. If eta < 0 then eta = max(A). Effective only when \code{method = 'nnls'}}
 
