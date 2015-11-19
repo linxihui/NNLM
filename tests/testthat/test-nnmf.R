@@ -49,6 +49,25 @@ test_that("Test NMF using nnls", {
 	expect_equal(dimnames(A.nnmf2$W), list(rownames(A), NULL));
 	expect_equal(dimnames(A.nnmf2$H), list(NULL, colnames(A)));
 	expect_equal(dimnames(W.new), list(rownames(A[1:4, ]), NULL));
+
+
+	set.seed(987);
+	W <- matrix(runif(n*k), n, k);
+	H <- matrix(runif(k*m), k, m);
+	Wm <- matrix(as.logical(rbinom(n*k, 1, 0.2)), n, k);
+	Hm <- matrix(as.logical(rbinom(n*k, 1, 0.1)), k, m);
+	W[Wm] <- 0;
+	H[Hm] <- 0;
+	A <- W %*% H;
+
+	set.seed(123);
+	A.nnmf <- nnmf(A, k, Wm = Wm, Hm = Hm, max.iter = 10000L, rel.tol=1e-6);
+
+	expect_true(all(A.nnmf$W >= 0));
+	expect_true(all(A.nnmf$H >= 0));
+	expect_equal(with(A.nnmf, W%*%H), A);
+	expect_true(all(A.nnmf$W[Wm] == 0));
+	expect_true(all(A.nnmf$H[Hm] == 0));
 	})
 
 
