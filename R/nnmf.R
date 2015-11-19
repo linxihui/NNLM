@@ -93,8 +93,14 @@ nnmf <- function(
 		if (any(dim(Hm) != c(k + kH0, ncol(A))))
 			stop("Dimension of Hm is invalid.");
 		}
-	if (check.k && k > min(dim(A))) 
-		stop("k must not be larger than min(nrow(A), ncol(A))");
+	
+	min.k <- min(dim(A));
+	if (any(is.na(A))) {
+		A.complete <- !is.na(A);
+		min.k <- min(min.k, rowSums(A.complete), colSums(A.complete));
+		}
+	if (check.k && k > min.k) 
+		stop(paste0("k is not recommended to be bigger than", min.k));
 	if (eta < 0) eta <- median(A);
 	if ('brunet' == method && (!is.null(W0) || !is.null(H0) || !is.null(Wm) || !is.null(Hm) || any(is.na(A))))
 		stop("When any of W0, H0, Wm, Hm is not NULL or NA in A, method must be 'nnls'.");

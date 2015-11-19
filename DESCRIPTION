@@ -3,8 +3,8 @@ Type: Package
 Title: Fast solvers for non-negative least square (NNLS) and non-negative matrix factorization (NMF)
 Description: This is a package for Non-Negative Linear Models. It implements a
     fast sequential coordinate descent algorithm for non-negative least square (NNLS)
-    and a fast algorithm for non-negative matrix factorization, with or without partially
-	known W and H matrices.
+    and a fast algorithm for non-negative matrix factorization, with potentials to work with missing values,
+    partially known and carefully designed W and H matrices.
 Version: 0.3.0
 Date: 2015-11-19
 Authors@R: person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre"))

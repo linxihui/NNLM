@@ -93,18 +93,18 @@ factorization would learn the expression profile $W_{i, l}, \, i\in S_l$ from th
 in `nnmf` with a logical mask matrix `Wm` = $\{\delta_{i\in s_l, l}\}$.
 
 
-### Missing values imputation and application in recomendation system
+### Missing values imputation and application in recommendation system
 
-Since matrix $A$ is assumed to have low rank $k$, information in $A$ is redundant for the decomposition,
-thus it possible to allow some entries in $A$ absent.  One can just use the non-missing entries to compute
-$W$ and $H$. Such methodology can be used to imputation the missing entries in $A$. This has an application
-to only recomendation system. For example, in Netflix, each customer commends only a small proportion of
-all the movies in Netflix and each movie is commended by some fraction of customers. 
-Thus the movie-customer comments (scores) matrix are fairely sparese (lots of missings). 
-Using a NNMF allowing missing values, one can predict the a customer's commends on a move he/she has not watched. 
-An recomendation can be done simply based on the predicted scores.  In additon, the resulting $W$ and $H$ 
-can be used to further cluster movie and customer. This method is also implemented in `nnmf` when the input 
-matrix `A` has some missings.
+Since matrix $A$ is assumed to have a low rank $k$ decomposition, information in $A$ is redundant.
+Thus it is possible to allow some entries in $A$ to be absent.  One can use the non-missing entries to compute
+$W$ and $H$. Such methodology can be used to imputation the missing entries in $A$. One application would be
+recommendation system. For example, on Netflix, each customer scores only a small proportion of
+all the movies on Netflix and each movie is scored by a fraction of customers. 
+Thus the movie-customer comments (scores) matrix are fairly spares (lots of missings). 
+Using a NNMF with missing values, one can predict a customer's scores on movies he/she has not watched. 
+A recommendation can be done simply based on the predicted scores.  In addition, the resulting $W$ and $H$ 
+can be used to further cluster movies and customers. This method is also implemented in `nnmf` when the input 
+matrix `A` includes missing values.
 
 
 ### Noise reduction
