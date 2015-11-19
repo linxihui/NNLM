@@ -45,10 +45,13 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 	int nnls_max_iter = 500;
 	double nnls_tol = tol > 1e-4 ? 1e-5 : tol/10.0;
 
+	umat mask;
+
 	// solve H given W
 	WtW = W.t()*W;
 	if (beta > 0) WtW += beta;
-	H = nnls_solver(WtW, -W.t()*A, nnls_max_iter, nnls_tol, n_threads);
+	H = nnls_solver(WtW, -W.t()*A, mask, nnls_max_iter, nnls_tol, n_threads);
+
 	
 	prgrss.increment();
 
@@ -63,12 +66,12 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 		// solve W given H
 		HHt = H*H.t();
 		if (eta > 0) HHt.diag() += eta;
-		W = nnls_solver(HHt, -H*A.t(), nnls_max_iter, nnls_tol, n_threads).t();
+		W = nnls_solver(HHt, -H*A.t(), mask, nnls_max_iter, nnls_tol, n_threads).t();
 
 		// solve H given W
 		WtW = W.t()*W;
 		if (beta > 0) WtW += beta;
-		H = nnls_solver(WtW, -W.t()*A, nnls_max_iter, nnls_tol, n_threads);
+		H = nnls_solver(WtW, -W.t()*A, mask, nnls_max_iter, nnls_tol, n_threads);
 
 		pen_err[i] = mean(mean(square(A - W*H)));
 		err[i] = std::sqrt(pen_err[i]);
@@ -92,53 +95,4 @@ Rcpp::List nmf_nnls(const mat & A, int k, double eta, double beta, int max_iter,
 		Rcpp::Named("error") = err,
 		Rcpp::Named("target_error") = pen_err
 		);
-}
-
-
-mat nnls_solver(const mat & H, mat mu, int max_iter, double tol, int n_threads)
-{
-	/*
-	 * Description: sequential Coordinate-wise algorithm for non-negative least square regression problem
-	 * 		A x = b, s.t. x >= 0
-	 * Arguments:
-	 * 	H: A^T * A
-	 * 	mu: -A^T * b
-	 * 	max_iter: maximum number of iterations.
-	 * 	tol: stop criterion, minimum change on x between two successive iteration.
-	 * Return: 
-	 * 	x: solution to argmin_{x, x>=0} ||Ax - b||_F^2
-	 * Reference: 
-	 * 	http://cmp.felk.cvut.cz/ftp/articles/franc/Franc-TR-2005-06.pdf 
-	 * Author:
-	 * 	Eric Xihui Lin <xihuil.silence@gmail.com>
-	 * Version:
-	 * 	2015-10-31
-	 */
-
-	mat x(H.n_cols, mu.n_cols, fill::zeros);
-	if (n_threads < 0) n_threads = 0; 
-
-	#pragma omp	parallel for num_threads(n_threads) schedule(dynamic)
-	for (int j = 0; j < mu.n_cols; j++)
-	{
-		vec x0(H.n_cols);
-		x0.fill(-9999);
-		double tmp;
-		int i = 0;
-		double err1, err2 = 9999;
-		do {
-			x0 = x.col(j);
-			for (int k = 0; k < H.n_cols; k++)
-			{
-				tmp = x.at(k,j) - mu.at(k,j) / H.at(k,k);
-				if (tmp < 0) tmp = 0;
-				if (tmp != x.at(k,j)) mu.col(j) += (tmp - x.at(k, j)) * H.col(k);
-				x.at(k,j) = tmp;
-			}
-			err1 = err2;
-			err2 = arma::max(arma::abs(x.col(j) - x0));
-		} while(++i < max_iter && std::abs(err1 - err2) / (err1 + 1e-9) > tol);
-	}
-
-	return x;
 }
