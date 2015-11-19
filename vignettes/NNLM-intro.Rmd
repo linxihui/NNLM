@@ -85,6 +85,36 @@ The known profile $W_0$ and $H_0$ can be passed via arguments `W0` and `H0`. $L_
 constrain for unknown matrices are also supported.
 
 
+### Sub-network integrated NNMF
+
+Assume $S = {s_1, ..., s_L}$, where $s_l, \, l = 1, ..., L$ is a set of genes in sub-network $s_l$, then one can
+design $W$ to be a matrix of $l$ columns (or more), with $W_{i, l} = 0, \, i \not\in s_l$.  Then the matrix
+factorization would learn the expression profile $W_{i, l}, \, i\in S_l$ from the data. This is implemented 
+in `nnmf` with a logical mask matrix `Wm` = $\{\delta_{i\in s_l, l}\}$.
+
+
+### Missing values imputation and application in recomendation system
+
+Since matrix $A$ is assumed to have low rank $k$, information in $A$ is redundant for the decomposition,
+thus it possible to allow some entries in $A$ absent.  One can just use the non-missing entries to compute
+$W$ and $H$. Such methodology can be used to imputation the missing entries in $A$. This has an application
+to only recomendation system. For example, in Netflix, each customer commends only a small proportion of
+all the movies in Netflix and each movie is commended by some fraction of customers. 
+Thus the movie-customer comments (scores) matrix are fairely sparese (lots of missings). 
+Using a NNMF allowing missing values, one can predict the a customer's commends on a move he/she has not watched. 
+An recomendation can be done simply based on the predicted scores.  In additon, the resulting $W$ and $H$ 
+can be used to further cluster movie and customer. This method is also implemented in `nnmf` when the input 
+matrix `A` has some missings.
+
+
+### Noise reduction
+
+This is obvious as the reconstruction from $W$ and $H$ lies on a smaller dimension, and should therefore
+give a smoother reconstruction. This noise reduction is particularly useful when the noise is not Gaussian
+which cannot be done using many other methods where Gaussian noise is assumed.
+
+
+
 ## Example 1: Non-small Cell Lung Cancer expression data
 
 ```{r nsclc, fig.show = 'hold', message = TRUE}
