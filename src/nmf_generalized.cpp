@@ -1,70 +1,5 @@
 #include "nnlm.h"
 
-inline void update_WtW(mat & WtW, const mat & W, const mat & W1)
-{
-	// compute WtW = (W, W1)^T (W, W1)
-	int k = W.n_cols;
-	if (W1.empty())
-		WtW = W.t()*W;
-	else
-	{
-		int kk = k + W1.n_cols;
-		WtW.submat(0, 0, k-1, k-1) = W.t() * W;
-		WtW.submat(k, 0, kk-1, k-1) = W1.t() * W;
-		WtW.submat(0, k, k-1, kk-1) = WtW.submat(k, 0, kk-1, k-1).t();
-		WtW.submat(k, k, kk-1, kk-1) = W1.t() * W1;
-	}
-}
-
-inline void update_WtW(mat & WtW, const mat & W, const mat & W1, const mat & H2)
-{
-	// compute WtW = (W[:, 0:k-1], W1)^T (W[:, 0:k-1], W1)
-	if (H2.empty())
-		update_WtW(WtW, W, W1);
-	else
-	{
-		int k = W.n_cols - H2.n_cols;
-		update_WtW(WtW, W.cols(0, k-1), W1);
-	}
-}
-
-inline void update_WtA(mat & WtA, const mat & W, const mat & W1, const mat & A)
-{
-	// compute WtA  = (W, W1)^T A
-	int k = W.n_cols;
-	if (W1.empty())
-		WtA = -W.t()*A;
-	else
-	{
-		WtA.rows(0, k-1) = -W.t()*A;
-		WtA.rows(k, WtA.n_rows-1) = -W1.t()*A;
-	}
-}
-
-inline void update_WtA(mat & WtA, const mat & W, const mat & W1, const mat & H2, const mat & A)
-{
-	// compute WtA = (W[:, 0:k-1], W1)^T (A - W[, k:end] H2^T)
-	if (H2.empty())
-		update_WtA(WtA, W, W1, A);
-	else
-	{
-		int k = W.n_cols - H2.n_cols;
-		update_WtA(WtA, W.cols(0, k-1), W1, A - W.cols(k, W.n_cols-1) * H2.t());
-	}
-}
-
-inline double mse(const mat & A, const mat & W, const mat & H, const mat & W1, const mat & H2)
-{
-	// compute mean square error of A and fixed A
-	int k = W.n_cols - H2.n_cols;
-	mat Adiff = A;
-	Adiff -= W.cols(0, k-1) * H.cols(0, k-1).t();
-	if (!W1.empty())
-		Adiff -= W1*H.cols(k, H.n_cols-1).t();
-	if (!H2.empty())
-		Adiff -= W.cols(k, W.n_cols-1)*H2.t();
-	return mean(mean(square(Adiff)));
-}
 
 //[[Rcpp::export]]
 Rcpp::List nnmf_generalized(const mat & A, const mat & W1, const mat & H2, mat W, umat Wm, umat Hm,
@@ -111,14 +46,20 @@ Rcpp::List nnmf_generalized(const mat & A, const mat & W1, const mat & H2, mat W
 	int k1 = W1.n_cols, k2 = H2.n_cols;
 	int nW = k+k2, nH = k+k1;
 
+	const bool no_missing_A = A.is_finite();
+
 	vec err(max_iter);
 	err.fill(-9999);
 	vec perr(err);
 
-	mat WtW(nH, nH); // known [w w1], get [h h1]
-	mat WtA(nH, m);
-	mat HtH(nW, nW); // known [h h2], get [w w2]
-	mat HtAt(nW, n);
+	mat WtW, WtA, HtH, HtAt; // empty
+	if (no_missing_A)
+	{
+		WtW.set_size(nH, nH); // known [w w1], get [h h1]
+		WtA.set_size(nH, m);
+		HtH.set_size(nW, nW); // known [h h2], get [w w2]
+		HtAt.set_size(nW, n);
+	}
 
 	mat H(n, nH); //W = [w w2]
 	inplace_trans(Hm);
@@ -127,28 +68,25 @@ Rcpp::List nnmf_generalized(const mat & A, const mat & W1, const mat & H2, mat W
 	if (W.empty())
 	{
 		W.set_size(n, nW);
-		if (H2.empty()) 
-		{
-			W.randu();
-			W = normalise(W);
-		}
-		else
-		{
-			W.cols(0, k-1).randu();
-			W.cols(0, k-1) = normalise(W.cols(0, k-1));
-			W.cols(k, nW-1).zeros();
-		}
+		W.randu();
+		W = normalise(W);
 	}
+	else if (W.n_cols != nW)
+		W.resize(n, nW);
 
 	// check progression if tracing off
 	if (trace > 0) show_progress = false;
 	Progress prgrss(max_iter, show_progress);
 
 	// solve H = [h h1] given [w w1]
-	update_WtW(WtW, W, W1, H2);
-	update_WtA(WtA, W, W1, H2, A);
-	if (beta > 0) WtW += beta;
-	H = nnls_solver(WtW, WtA, Hm, nnls_max_iter, nnls_rel_tol, n_threads).t();
+	// update_WtW(WtW, W, W1, H2);
+	// update_WtA(WtA, W, W1, H2, A);
+	// if (beta > 0) WtW += beta;
+	// H = nnls_solver(WtW, WtA, Hm, nnls_max_iter, nnls_rel_tol, n_threads).t();
+	if (no_missing_A)
+		H = nnls_solver_without_missing(WtW, WtA, A, W, W1, H2, Hm, 0, beta, nnls_max_iter, nnls_rel_tol, n_threads).t();
+	else
+		H = nnls_solver_with_missing(A, W, W1, H2, Hm, 0, beta, nnls_max_iter, nnls_rel_tol, n_threads).t();
 
 	if (trace > 0)
 	{
@@ -171,17 +109,26 @@ Rcpp::List nnmf_generalized(const mat & A, const mat & W1, const mat & H2, mat W
 		// increasing accuracy
 		nnls_rel_tol_adp = std::max(nnls_rel_tol/(i+1), 1e-8);
 
+
 		// solve W = [w w2] given [h h2]
-		update_WtW(HtH, H, H2, W1);
-		update_WtA(HtAt, H, H2, W1, A.t());
-		if (eta > 0) HtH.diag() += eta;
-		W = nnls_solver(HtH, HtAt, Wm, nnls_max_iter, nnls_rel_tol_adp, n_threads).t();
+		// jupdate_WtW(HtH, H, H2, W1);
+		// jupdate_WtA(HtAt, H, H2, W1, A.t());
+		// jif (eta > 0) HtH.diag() += eta;
+		// W = nnls_solver(HtH, HtAt, Wm, nnls_max_iter, nnls_rel_tol_adp, n_threads).t();
+		if (no_missing_A)
+			W = nnls_solver_without_missing(HtH, HtAt, A.t(), H, H2, W1, Wm, eta, 0, nnls_max_iter, nnls_rel_tol_adp, n_threads).t();
+		else
+			W = nnls_solver_with_missing(A.t(), H, H2, W1, Wm, eta, 0, nnls_max_iter, nnls_rel_tol_adp, n_threads).t();
 
 		// solve H = [h h1] given [w w1]
-		update_WtW(WtW, W, W1, H2);
-		update_WtA(WtA, W, W1, H2, A);
-		if (beta > 0) WtW += beta;
-		H = nnls_solver(WtW, WtA, Hm, nnls_max_iter, nnls_rel_tol_adp, n_threads).t();
+		// update_WtW(WtW, W, W1, H2);
+		// update_WtA(WtA, W, W1, H2, A);
+		// if (beta > 0) WtW += beta;
+		// H = nnls_solver(WtW, WtA, Hm, nnls_max_iter, nnls_rel_tol_adp, n_threads).t();
+		if (no_missing_A)
+			H = nnls_solver_without_missing(WtW, WtA, A, W, W1, H2, Hm, 0, beta, nnls_max_iter, nnls_rel_tol_adp, n_threads).t();
+		else
+			H = nnls_solver_with_missing(A, W, W1, H2, Hm, 0, beta, nnls_max_iter, nnls_rel_tol_adp, n_threads).t();
 
 		perr(i) = mse(A, W, H, W1, H2);
 		err(i) = std::sqrt(perr(i));
@@ -200,7 +147,7 @@ Rcpp::List nnmf_generalized(const mat & A, const mat & W1, const mat & H2, mat W
 
 	if (i >= max_iter)
 	{
-		if (show_warning && std::abs(perr(i-1)-perr(i))/(perr(i-1)+1e-6) > rel_tol)
+		if (show_warning && rel_err > rel_tol)
 			Rcpp::warning("Target tolerance not reached. Try a larger max.iter.");
 	}
 	else
