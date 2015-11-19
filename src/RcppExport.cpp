@@ -3,6 +3,22 @@
 
 #include "nnlm.h"
 
+// nnls
+RcppExport SEXP NNLM_nnls(SEXP ASEXP, SEXP bSEXP, SEXP max_iterSEXP, SEXP tolSEXP, SEXP n_threadsSEXP, SEXP show_progressSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const mat& >::type b(bSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
+    Rcpp::traits::input_parameter< bool >::type show_progress(show_progressSEXP);
+    __result = Rcpp::wrap(nnls(A, b, max_iter, tol, n_threads, show_progress));
+    return __result;
+END_RCPP
+}
+
 // get_H_brunet
 RcppExport SEXP NNLM_get_H_brunet(SEXP ASEXP, SEXP WSEXP, SEXP max_iterSEXP, SEXP tolSEXP, SEXP n_threadsSEXP, SEXP show_progressSEXP, SEXP show_warningSEXP) {
 BEGIN_RCPP
@@ -56,64 +72,29 @@ BEGIN_RCPP
 END_RCPP
 }
 
-// nmf_partial
-RcppExport SEXP NNLM_nmf_partial(SEXP ASEXP, SEXP W1SEXP, SEXP H2SEXP, SEXP kSEXP, SEXP etaSEXP, SEXP betaSEXP, SEXP max_iterSEXP, SEXP tolSEXP, SEXP n_threadsSEXP, SEXP show_progressSEXP, SEXP show_warningSEXP) {
+// NNMF with partial known information and mask
+RcppExport SEXP NNLM_nnmf_generalized(SEXP ASEXP, SEXP W1SEXP, SEXP H2SEXP, SEXP WSEXP, SEXP WmSEXP, SEXP HmSEXP, SEXP kSEXP, SEXP etaSEXP, SEXP betaSEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP, SEXP n_threadsSEXP, SEXP show_progressSEXP, SEXP show_warningSEXP, SEXP nnls_max_iterSEXP, SEXP nnls_rel_tolSEXP, SEXP traceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< const mat& >::type A(ASEXP);
     Rcpp::traits::input_parameter< const mat& >::type W1(W1SEXP);
     Rcpp::traits::input_parameter< const mat& >::type H2(H2SEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
-    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
-    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
-    Rcpp::traits::input_parameter< bool >::type show_progress(show_progressSEXP);
-    Rcpp::traits::input_parameter< bool >::type show_warning(show_warningSEXP);
-    __result = Rcpp::wrap(nmf_partial(A, W1, H2, k, eta, beta, max_iter, tol, n_threads, show_progress, show_warning));
-    return __result;
-END_RCPP
-}
-
-// nnls
-Rcpp::List nnls(const mat& A, const mat& b, int max_iter, double tol, int n_threads, bool show_progress);
-RcppExport SEXP NNLM_nnls(SEXP ASEXP, SEXP bSEXP, SEXP max_iterSEXP, SEXP tolSEXP, SEXP n_threadsSEXP, SEXP show_progressSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const mat& >::type A(ASEXP);
-    Rcpp::traits::input_parameter< const mat& >::type b(bSEXP);
-    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
-    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
-    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
-    Rcpp::traits::input_parameter< bool >::type show_progress(show_progressSEXP);
-    __result = Rcpp::wrap(nnls(A, b, max_iter, tol, n_threads, show_progress));
-    return __result;
-END_RCPP
-}
-
-
-// nmf_partial2
-RcppExport SEXP NNLM_nmf_partial2(SEXP ASEXP, SEXP W1SEXP, SEXP H2SEXP, SEXP WmSEXP, SEXP HmSEXP, SEXP kSEXP, SEXP etaSEXP, SEXP betaSEXP, SEXP max_iterSEXP, SEXP tolSEXP, SEXP n_threadsSEXP, SEXP show_progressSEXP, SEXP show_warningSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const mat& >::type A(ASEXP);
-    Rcpp::traits::input_parameter< const mat& >::type W1(W1SEXP);
-    Rcpp::traits::input_parameter< const mat& >::type H2(H2SEXP);
+    Rcpp::traits::input_parameter< mat >::type W(WSEXP);
     Rcpp::traits::input_parameter< umat >::type Wm(WmSEXP);
     Rcpp::traits::input_parameter< umat >::type Hm(HmSEXP);
     Rcpp::traits::input_parameter< int >::type k(kSEXP);
     Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
     Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
-    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< double >::type rel_tol(rel_tolSEXP);
     Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< bool >::type show_progress(show_progressSEXP);
     Rcpp::traits::input_parameter< bool >::type show_warning(show_warningSEXP);
-    __result = Rcpp::wrap(nmf_partial2(A, W1, H2, Wm, Hm, k, eta, beta, max_iter, tol, n_threads, show_progress, show_warning));
+    Rcpp::traits::input_parameter< int >::type nnls_max_iter(nnls_max_iterSEXP);
+    Rcpp::traits::input_parameter< double >::type nnls_rel_tol(nnls_rel_tolSEXP);
+    Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
+    __result = Rcpp::wrap(nnmf_generalized(A, W1, H2, W, Wm, Hm, k, eta, beta, max_iter, rel_tol, n_threads, show_progress, show_warning, nnls_max_iter, nnls_rel_tol, trace));
     return __result;
 END_RCPP
 }
