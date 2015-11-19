@@ -248,14 +248,46 @@ round(cor(W1, deconvol$W1), 2);
 ## [1,]    1
 ```
 
+# Other applications
+
+### Sub-network integrated NNMF
+
+Assume _S_ = {s\_1, ..., s\_L}, where s\_l, l = 1, ..., L is a set of genes in sub-network s\_l. One can
+design _W_ to be a matrix of l columns (or more), with W\_{i, l} = 0,  i not ∈ s\_l.  Then the matrix
+factorization would learn the expression profile W\_{i, l}, i ∈ S\_l from the data. This is implemented 
+in `nnmf` with a logical mask matrix `Wm` = {δ\_{i∈ s\_l, l}}.
+
+
+### Missing values imputation and application in recomendation system
+
+Since matrix _A_ is assumed to have low rank _k_, information in _A_ is redundant for the decomposition,
+thus it possible to allow some entries in _A_ absent.  One can just use the non-missing entries to compute
+_W_ and _H_. Such methodology can be used to imputation the missing entries in _A_. This has an application
+to only recomendation system. For example, in Netflix, each customer commends only a small proportion of
+all the movies in Netflix and each movie is commended by some fraction of customers. 
+Thus the movie-customer comments (scores) matrix are fairely sparese (lots of missings). 
+Using a NNMF allowing missing values, one can predict the a customer's commends on a move he/she has not watched. 
+An recomendation can be done simply based on the predicted scores.  In additon, the resulting _W_ and _H_ 
+can be used to further cluster movie and customer. This method is also implemented in `nnmf` when the input 
+matrix `A` has some missings.
+
+
+### Noise reduction
+
+This is obvious as the reconstruction from _W_ and _H_ lies on a smaller dimension, and should therefore
+give a smoother reconstruction. This noise reduction is particularly useful when the noise is not Gaussian
+which cannot be done using many other methods where Gaussian noise is assumed.
+
+
 
 # TODO
-1. Add support for meta-genes: thresholding
-2. ~~Heatmap~~
-3. ~~Examples~~
-4. ~~Vignette~~
-5. ~~Test~~
-6. ~~.traivs.yml~~
-7. ~~code coverage~~
-8. ~~Parallel, openMP support~~
-9. Support for missing values in NMF (can be used for imputation)
+1. ~~Heatmap~~
+2. ~~Examples~~
+3. ~~Vignette~~
+4. ~~Test~~
+5. ~~.traivs.yml~~
+6. ~~code coverage~~
+7. ~~Parallel, openMP support~~
+8. ~~Support for missing values in NMF (can be used for imputation and recomendation system)~~
+9. Add support for meta-genes: thresholding
+

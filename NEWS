@@ -1,3 +1,12 @@
+NNLM-0.3.0: 2015-11-19
+======================
+
+- `nmf_partial` was updated to `nnmf_general`, with two more greate features
+	* NMF with masked entries in W and H forced to 0
+	* Allowing missing values in matrix A, which is useful for missing
+		value imputaiton and recommendation system.
+- Add more potential applications on vignette
+
 NNLM-0.2.0: 2015-11-08
 ======================
 
@@ -5,7 +14,7 @@ NNLM-0.2.0: 2015-11-08
 	tumour content deconvolution with known healty profile
 - Updated vignette
 
-NNLM-0.0.2: 2015-11-04
+NNLM-0.1.0: 2015-11-04
 ======================
 
 - OpenMP support for multiple threading

@@ -87,7 +87,7 @@ constrain for unknown matrices are also supported.
 
 ### Sub-network integrated NNMF
 
-Assume $S = {s_1, ..., s_L}$, where $s_l, \, l = 1, ..., L$ is a set of genes in sub-network $s_l$, then one can
+Assume $S = {s_1, ..., s_L}$, where $s_l, \, l = 1, ..., L$ is a set of genes in sub-network $s_l$. One can
 design $W$ to be a matrix of $l$ columns (or more), with $W_{i, l} = 0, \, i \not\in s_l$.  Then the matrix
 factorization would learn the expression profile $W_{i, l}, \, i\in S_l$ from the data. This is implemented 
 in `nnmf` with a logical mask matrix `Wm` = $\{\delta_{i\in s_l, l}\}$.
