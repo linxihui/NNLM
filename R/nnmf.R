@@ -76,36 +76,40 @@ nnmf <- function(
 		}
 	if (!is.null(W.init)) {
 		W.init <- check.input.matrix(W.init);
-		if (any(dim(W.init) != c(nrow(A), k + kW0)))
-			stop("Dimension of W.init is invalid.");
+		if (ncol(W.init) == k && kH0 > 0)
+			W.init <- cbind(W.init, matrix(runif(nrow(W.init)*kH0), nrow(W.init), kH0));
+		if (any(dim(W.init) != c(nrow(A), k + kH0)))
+			stop("Dimension of W.init is must be nrow(A) x k or nrow(A) x (k+nrow(H0))");
 		}
 	if (!is.null(Wm)) {
 		Wm <- check.input.mask(Wm);
-		if (ncol(Wm) == k && kW0 > 0)
-			Wm <- cbind(Wm, matrix(FALSE, ncol(Wm), kW0));
-		if (any(dim(Wm) != c(nrow(A), k + kW0)))
-			stop("Dimension of Wm is invalid.");
+		if (ncol(Wm) == k && kH0 > 0)
+			Wm <- cbind(Wm, matrix(FALSE, nrow(Wm), kH0));
+		if (any(dim(Wm) != c(nrow(A), k + kH0)))
+			stop("Dimension of Wm must be nrow(A) x k or nrow(A) x (k+nrow(H0))");
 		}
 	if (!is.null(Hm)) {
 		Hm <- check.input.mask(Hm);
-		if (nrow(Hm) == k && kH0 > 0)
-			Hm <- rbind(Hm, matrix(0, kH0, ncol(Hm)));
-		if (any(dim(Hm) != c(k + kH0, ncol(A))))
-			stop("Dimension of Hm is invalid.");
+		if (nrow(Hm) == k && kW0 > 0)
+			Hm <- rbind(Hm, matrix(0, kW0, ncol(Hm)));
+		if (any(dim(Hm) != c(k + kW0, ncol(A))))
+			stop("Dimension of Hm must be k x ncol(A) or (k+ncol(W0)) x ncol(A).");
 		}
 	
 	min.k <- min(dim(A));
-	if (any(is.na(A))) {
-		A.complete <- !is.na(A);
-		min.k <- min(min.k, rowSums(A.complete), colSums(A.complete));
+	A.isNA <- is.na(A);
+	A.anyNA <- any(A.isNA); # anyNA is depreciated in new version of R
+	if (A.anyNA) {
+		min.k <- min(min.k, ncol(A) - rowSums(A.isNA), nrow(A) - colSums(A.isNA));
 		}
-	if (check.k && k > min.k) 
+	rm(A.isNA);
+	if (check.k && k > min.k)
 		stop(paste0("k is not recommended to be bigger than", min.k));
 	if (eta < 0) eta <- median(A);
-	if ('brunet' == method && (!is.null(W0) || !is.null(H0) || !is.null(Wm) || !is.null(Hm) || any(is.na(A))))
+	if ('brunet' == method && (A.anyNA || !is.null(W0) || !is.null(H0) || !is.null(Wm) || !is.null(Hm)))
 		stop("When any of W0, H0, Wm, Hm is not NULL or NA in A, method must be 'nnls'.");
 
-	if (n.threads < 0L) n.threads <- 0L;
+	if (n.threads < 0L) n.threads <- 0L; # let openMP decide
 
 	run.time <- system.time(
 		out <- switch(method,
@@ -120,13 +124,13 @@ nnmf <- function(
 					# transform NULLs to empty matrices
 					if (is.null(W0)) W0 <- matrix(0., 0, 0);
 					if (is.null(H0)) H0 <- matrix(0., 0, 0);
+					if (is.null(Wm)) Wm <- matrix(FALSE, 0, 0);
+					if (is.null(Hm)) Hm <- matrix(FALSE, 0, 0);
 					if (is.null(W.init)) W.init <- matrix(0., 0, 0);
-					if (is.null(Wm)) Wm <- matrix(0., 0, 0);
-					if (is.null(Hm)) Hm <- matrix(0., 0, 0);
 					.Call('NNLM_nnmf_generalized', 
 						A, W0, t(H0), W.init, Wm, t(Hm), as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
 						as.double(rel.tol), as.integer(n.threads), as.logical(show.progress), as.logical(show.warning), 
-						500L, 1e-6, FALSE, PACKAGE = 'NNLM'
+						500L, 1e-8, FALSE, PACKAGE = 'NNLM'
 						)
 					}
 				},
