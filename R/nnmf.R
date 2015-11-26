@@ -104,7 +104,7 @@ nnmf <- function(
 		}
 	rm(A.isNA);
 	if (check.k && k > min.k)
-		stop(paste0("k is not recommended to be bigger than", min.k));
+		stop(paste("k larger than", min.k, "is not recommended, unless properly masked or regularized."));
 	if (eta < 0) eta <- median(A);
 	if ('brunet' == method && (A.anyNA || !is.null(W0) || !is.null(H0) || !is.null(Wm) || !is.null(Hm)))
 		stop("When any of W0, H0, Wm, Hm is not NULL or NA in A, method must be 'nnls'.");
@@ -115,6 +115,7 @@ nnmf <- function(
 		out <- switch(method,
 			'nnls' = {
 				if (!any(is.na(A)) && all(c(is.null(W0), is.null(H0), is.null(Wm), is.null(Hm)))) {
+					# lighter and faster routine
 					.Call('NNLM_nmf_nnls', 
 						A, as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
 						as.double(rel.tol), as.integer(n.threads), as.logical(show.progress), as.logical(show.warning),
@@ -144,13 +145,13 @@ nnmf <- function(
 	# add row/col names back
 	if (!is.null(rownames(A))) rownames(out$W) <- rownames(A);
 	if (!is.null(colnames(A))) colnames(out$H) <- colnames(A);
-	if (!is.null(W0)) {
+	if (length(W0) > 0) {
 		out$W0 <- W0;
 		out$H1 <- out$H[-seq_len(k), ];
 		rownames(out$H1) <- colnames(W0);
 		out$H <- out$H[seq_len(k), ];
 		}
-	if (!is.null(H0)) {
+	if (length(H0) > 0) {
 		out$W1 <- out$W[, -seq_len(k)];
 		colnames(out$W1) <- rownames(W0);
 		out$H0 <- H0;

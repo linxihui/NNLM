@@ -29,7 +29,7 @@
 #' beta.hat <- nnls(x, y)
 #'
 #' @export
-nnls <- function(x, y, check.x = TRUE, max.iter = 10000L, rel.tol = 1e-4, n.threads = 1L, show.progress = TRUE) {
+nnls <- function(x, y, check.x = TRUE, max.iter = 10000L, rel.tol = .Machine$double.eps, n.threads = 1L, show.progress = TRUE) {
 	if (!is.matrix(x)) x <- as.matrix(x);
 	if (!is.double(x)) storage.mode(x) <- 'double';
 	if (is.y.not.matrix <- !is.matrix(y)) y <- as.matrix(y);
@@ -57,7 +57,8 @@ nnls <- function(x, y, check.x = TRUE, max.iter = 10000L, rel.tol = 1e-4, n.thre
 		warning("Program interrupted. Solution may be problematic.");
 		}
 
-	dimnames(sol$coefficients) <- list(colnames(x), colnames(y));
+	if (!is.null(colnames(x)) || !is.null(colnames(y)))
+		dimnames(sol$coefficients) <- list(colnames(x), colnames(y));
 	if (is.y.not.matrix)
 		sol$coefficients <- sol$coefficients[, seq_len(ncol(sol$coefficients)), drop = TRUE];
 
