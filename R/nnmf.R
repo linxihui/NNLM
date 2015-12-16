@@ -1,101 +1,151 @@
 #' Non-negative matrix factorization
 #'
-#' Non-negative matrix factorization(NNMF) using alternating NNLS or Brunet's multiplicative update
+#' Non-negative matrix factorization(NMF or NNMF) using sequential coordinate-wise descent or multiplicative updates
 #'
 #' The problem of non-negative matrix factorization is to find \code{W, H, W_1, H_1}, such that \cr
-#' 		\deqn{A = W H + W_0 H_1 + W_1 H_0 + noise,}\cr
-#' where \eqn{W_0}, \eqn{H_0} are known matrices, which are NULLs in most application case. 
+#' 		\deqn{A = W H + W_0 H_1 + W_1 H_0 + noise = [W\, W_0\, W_1] [H^T\, H_1^T\, H_0^T]^T}\cr
+#' where \eqn{W_0}, \eqn{H_0} are known matrices, which are NULLs in most application case.
 #' In tumour content deconvolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
 #' is desired pure cancer profile. One also set \eqn{H_0} to a row matrix of 1, and thus \eqn{W_1}
-#' can be treated as common profile among samples.
+#' can be treated as common profile among samples. Use \code{init} to specify \eqn{W_0} and \eqn{H_0}.
 #'
-#' To simplify the notations, we denote right hand side of the above equation as \eqn{W H}. 
+#' Argument \code{init}, if used, must be a list with entries named as 'W', 'H', 'W0', 'W1', 'H1', 'H0'.
+#' One could specify only a few of them. Only use 'W0' (and its correpondent 'H1') or 'H0' (and its correspondent 'W1')
+#' for known matrices/profiles.
+#'
+#' Similarly, argument \code{mask}, if used, must be a list entries named as 'W', 'H', 'W0', 'W1', 'H1', 'H0',
+#' and they should be either NULL (no specified) or a logical matrix. If a masked for matrix is specified, then
+#' masked entries will be fixed to their initial values if initialized (skipped during iteration), or 0 if not
+#' initialized.
+#'
+#' To simplify the notations, we denote right hand side of the above equation as \eqn{W H}.
 #' The problem to solved using square error is\cr
-#' 	  \deqn{argmin_{W \ge 0, H \ge 0} ||A - W H||_2^2 + \eta*||W||_F^2 + \beta*\sum_{j=1}^m (||H_j||_1^2),}\cr
-#' where \eqn{H_j} is the j-th column of \eqn{H}. This minimization problem is solved by apply 
-#' \code{\link{nnls}} to W and H alternatively, when \code{method == 'nnls'},
-#' which is implemented using sequential coordinate descend methods. 
+#' 	  \deqn{argmin_{W \ge 0, H \ge 0} L(A, W H) + J(W, \alpha) + J(H^T, \beta)}\cr
+#' where \eqn{L(x, y)} is a loss function either a square loss \eqn{1/2 ||x-y||_2^2} or a Kullback-Leibler
+#' divergence \eqn{x \log (x/y) - x - y}. The formal one is usually better for symmetric distribution, while
+#' the later one is more suitable for skewed distribution, especially for count data as it can be derived from 
+#' Possion distributed observation. The penalty function \eqn{J} is a composition of three types of penalties, 
+#' which aim to minizing L2 norm, maxizing angles between hidden features (columns of W and rows of H) and
+#' L1 norm (sparsity).  The parameters \eqn{\alpha,\, \beta} of length 3 indicates the amount of penalties. 
 #'
-#' When \code{method = 'brunet'}, decomposition is done using Brunet's  multiplicative updates based on 
-#' Kullback-Leibler divergence. Note that penalties \code{eta}, \code{beta} and known profiles \code{W0} \code{H0} 
-#' are not support in this case.
+#' When \code{method == 'scd'}, a sequential coordinate-wise descent algorithm is used when solving \eqn{W}
+#' and \eqn{H} alternatively, which are non-negative regression problem. The \code{inner.max.iter} and
+#' \code{inner.rel.tol} is used to control the number of iteration for these non-negative regressions.
+#' This is also applicable to \code{method == 'lee'} (the original algorithm only iteration through all entries
+#' once for each iteration), which is usually faster than the orignial algorithm when \code{loss == 'mse'}.
+#' When \code{loss == 'mkl'}, a quadratic approximation to the KL-divergence is used when \code{method == 'scd'}.
+#' Generally, for run time, 'scd' is faster than 'lee' and 'mse' is faster than 'mkl'.
 #'
-#' @param A             A matrix to be decomposed
-#' @param k             An integer of decomposition rank
-#' @param method        Decomposition algorithms. Options are 'nnls'(default), 'brunet'
-#' @param W0            Known \code{W} (left) profile
-#' @param H0            Known \code{H} (right) profile
-#' @param W.init        Initial matrix of [W, W1]. Sample frome Unif(0,1) if NULL (default)
-#' @param Wm            Masked matrix (logical values) with dimension like [W, W1], s.t. masked entries are fixed to 0. No mask if set to NULL (default)
-#' @param Hm            Masked matrix (logical values) with dimension like [H, H1]^T, s.t. masked entries are fixed to 0. No mask if set to NULL (default)
-#' @param eta           L2 penalty on the left (W). Default to no penalty. If eta < 0 then eta = max(A). Effective only when \code{method = 'nnls'}
-#' @param beta          L1 penalty on the right (H). Default to no penalty. Effective only when \code{method = 'nnls'}
-#' @param max.iter      Maximum iteration of alternating NNLS solutions to H and W
-#' @param rel.tol       Stop criterion, relative difference of target_error between two successive iterations
-#' @param check.k       If to check whether k <= n*m/(n+m), where (n,m)=dim(A)
-#' @param n.threads     An integer number of threads/CPUs to use. Default to 1(no parallel). Specify 0 for all cores
-#' @param show.progress TRUE/FALSE indicating if to show a progress bar
-#' @param show.warning  If to show warnings when targeted \code{rel.tol} is not reached
+#' @param A              A matrix to be decomposed
+#' @param k              An integer of decomposition rank
+#' @param alpha          [L2, angle, L1] regularization on W (non-masked entries)
+#' @param beta           [L2, angle, L1] regularization on H (non-masked entries)
+#' @param method         Decomposition algorithms, either 'scd' for sequential coordinate-wise descent(default)
+#'                       or 'lee' for Lee's multiplicative algorithm
+#' @param loss           Loss function to use, either 'mse' for mean seqaure error (default) or 'mkl' for mean KL-divergence
+#' @param init           A list of initial matrices for W and H. One can also supply known matrices W0, H0, and initialize
+#'                       their correspondent matrices H1 and W1. See details
+#' @param mask           A list of mask matrices for W, H, H1 (if \code{init$W0} supplied), W1 (if \code{init$H0} supplied), which
+#'                       should have the same shapes as W, H, H1 and W1 if specified. If initial matrices not specified, masked entries
+#'                       are fixed to 0. See details
+#' @param W.norm         A numeric value 'p' indicating the \eqn{L_p}-norm (can be infinity) used to normalized the outcome \code{W} matrix.
+#'                       No normalization will be performed if 0 or negative. This argument has no effect on outcome correspondent to
+#'                       known profiles \code{W0, H0}. Default to 1, i.e. sum of W should sum up to 1, which can be interpreted as
+#'                       "distribution" or "proportion"
+#' @param check.k        If to check whether \eqn{k \le nm/(n+m)}, where (n,m)=dim(A), or k is smaller than the column-wise
+#'                       and row-wise minimum numbers of complete observation
+#' @param max.iter       Maximum iteration of alternating NNLS solutions to H and W
+#' @param rel.tol        Stop criterion, which is relative tolerance between two successive iterations, = |e2-e1|/avg(e1, e2)
+#' @param n.threads      An integer number of threads/CPUs to use. Default to 1(no parallel). Specify 0 for all cores
+#' @param trace          An integer or logical value to control progress display. \itemize{
+#'                           \item positive value \code{m}: information will be printed every \code{m}-iterations.
+#'                           \item \code{0} or \code{TRUE}(default): a progress bar will be shown
+#'                           \item negative value or \code{FALSE}: no trace at all}
+#' @param show.warning   If to show warnings when targeted \code{rel.tol} is not reached
+#' @param inner.max.iter Maximum number of iterations passed to each inner W or H matrix updating loop
+#' @param inner.rel.tol  Stop criterion for the inner loop, which is elative tolerance passed to inner W or H matrix updating
+#'                       i.e., |e2-e1|/avg(e1, e2)
 #' @return A list with components
 #' 	\itemize{
-#' 		\item{W:}{ left/base matrix W}
-#' 		\item{H:}{ right/coefficient matrix H}
-#' 		\item{error:}{ root mean square error between A and W*H}
-#' 		\item{target.error:}{ error used to stop iteration}
-#' 		\item{target.measure:}{ the measure for \code{target.error}}
-#' 		\item{H1:}{ coefficient matrix corresponding to known W0}
-#' 		\item{W1:}{ base matrix corresponding to known H0}
-#' 	} 
+#' 		\item W              : left matrix, including known W0 and W1 if available, i.e., column stacked as \eqn{[W, W0, W1]}
+#' 		\item H              : right matrix, including H1 and known H0 if available, i.e. row stacked as \eqn{[H^T, H1^T, H0^T]^T}
+#' 		\item mse            : a vector of mean squared errors through iterations
+#' 		\item mkl            : a vector of mean KL-divergence through iterations
+#' 		\item target.loss    : target for minimization, which is mean KL-divergence (if \code{loss == 'mkl'}) or half of mean squared error
+#'                             if \code{loss == 'mse'} plus penalties
+#' 		\item average.epochs : a vector of average epochs (one complete swap over W and H)
+#' 		\item n.iteration    : total number of iteration (sum over all column of \code{beta})
+#' 		\item run.time       : running time
+#' 		\item options        : list of information of input arguments
+#' 		\item call           : function call
+#' 	}
+#'
+#' @references
+#'
+#' Franc, V. C., Hlavac, V. C., Navara, M. (2005). Sequential Coordinate-Wise Algorithm for the Non-negative Least Squares Problem.
+#' Proc. Int'l Conf. Computer Analysis of Images and Patterns. Lecture Notes in Computer Science 3691. p. 407.\cr
+#' 
+#' Lee, Daniel D., and H. Sebastian Seung. 1999. "Learning the Parts of Objects by Non-Negative Matrix Factorization."
+#' Nature 401: 788-91.\cr
+#'
+#' Pascual-Montano, Alberto, J.M. Carazo, Kieko Kochi, Dietrich Lehmann, and Roberto D.Pascual-Marqui. 2006. 
+#' "Nonsmooth Nonnegative Matrix Factorization (NsNMF)." IEEE Transactions on Pattern Analysis and Machine Intelligence 28 (3): 403-14.\cr
+#'
 #' @author Eric Xihui Lin, \email{xihuil.silence@@gmail.com}
-#' @seealso \code{\link{nnls}}, \code{\link{predict.nnmf}}
+#' @seealso \code{\link{nnlm}}, \code{\link{predict.nnmf}}
+#'
 #' @examples
 #'
-#' x <- matrix(runif(50*20), 50, 20)
-#' r <- nnmf(x, 2)
+#' # Pattern extraction, meta-gene
+#' set.seed(123);
+#' 
+#' data(nsclc, package = 'NNLM')
+#' str(nsclc)
+#'
+#' decomp <- nnmf(nsclc[, 1:80], 3, rel.tol = 1e-5);
+#' 
+#' heatmap(decomp$W, Colv = NA, xlab = 'Meta-gene', ylab = 'Gene', margins = c(2,2),
+#' 	labRow = '', labCol = '', scale = 'column', col = cm.colors(100));
+#' heatmap(decomp$H, Rowv = NA, ylab = 'Meta-gene', xlab = 'Patient', margins = c(2,2),
+#' 	labRow = '', labCol = '', scale = 'row', col = cm.colors(100));
+#' 
+#' # missing value imputation
+#' set.seed(123);
+#' nsclc2 <- nsclc;
+#' index <- sample(length(nsclc2), length(nsclc2)*0.3);
+#' nsclc2[index] <- NA;
+#' 
+#' # impute using NMF
+#' system.time(nsclc2.nmf <- nnmf(nsclc2, 2));
+#' nsclc2.hat.nmf <- with(nsclc2.nmf, W %*% H);
+#' 
+#' mse.mkl(nsclc[index], nsclc2.hat.nmf[index])
 #'
 #' @export
 nnmf <- function(
-	A, k = 1L, method = c('nnls', 'brunet'), W0 = NULL, H0 = NULL, 
-	W.init = NULL, Wm = NULL, Hm = NULL,
-	eta = 0, beta = 0, max.iter = 500L, rel.tol = 1e-4, 
-	check.k = TRUE, n.threads = 1L, show.progress = TRUE, 
-	show.warning = TRUE
+	A, k = 1L, alpha = rep(0,3), beta = rep(0,3), method = c('scd', 'lee'),
+	loss = c('mse', 'mkl'), init = NULL, mask = NULL, W.norm = -1L, check.k = TRUE,
+	max.iter = 500L, rel.tol = 1e-4, n.threads = 1L, trace = 0, show.warning = TRUE,
+	inner.max.iter = ifelse('mse' == loss, 50L, 1L), inner.rel.tol = 1e-9
 	) {
-	method = match.arg(method);
-	A <- check.input.matrix(A, check.missing = FALSE);
-	kW0 <- kH0 <- 0;
-	if (!is.null(W0)) {
-		W0 <- check.input.matrix(W0);
-		if (nrow(W0) != nrow(A)) stop("Rows of A and W0 must match.");
-		kW0 <- ncol(W0);
-		}
-	if (!is.null(H0)) {
-		H0 <- check.input.matrix(H0);
-		if (ncol(H0) != ncol(A)) stop("Columns of A and H0 must match.");
-		kH0 <- nrow(H0);
-		}
-	if (!is.null(W.init)) {
-		W.init <- check.input.matrix(W.init);
-		if (ncol(W.init) == k && kH0 > 0)
-			W.init <- cbind(W.init, matrix(runif(nrow(W.init)*kH0), nrow(W.init), kH0));
-		if (any(dim(W.init) != c(nrow(A), k + kH0)))
-			stop("Dimension of W.init is must be nrow(A) x k or nrow(A) x (k+nrow(H0))");
-		}
-	if (!is.null(Wm)) {
-		Wm <- check.input.mask(Wm);
-		if (ncol(Wm) == k && kH0 > 0)
-			Wm <- cbind(Wm, matrix(FALSE, nrow(Wm), kH0));
-		if (any(dim(Wm) != c(nrow(A), k + kH0)))
-			stop("Dimension of Wm must be nrow(A) x k or nrow(A) x (k+nrow(H0))");
-		}
-	if (!is.null(Hm)) {
-		Hm <- check.input.mask(Hm);
-		if (nrow(Hm) == k && kW0 > 0)
-			Hm <- rbind(Hm, matrix(0, kW0, ncol(Hm)));
-		if (any(dim(Hm) != c(k + kW0, ncol(A))))
-			stop("Dimension of Hm must be k x ncol(A) or (k+ncol(W0)) x ncol(A).");
-		}
-	
+	method <- match.arg(method);
+	loss <- match.arg(loss);
+	check.matrix(A, input.name = 'A');
+	if (!is.double(A))
+		storage.mode(A) <- 'double';
+	n <- nrow(A);
+	m <- ncol(A);
+
+	init.mask <- reformat.input(init, mask, n, m, k);
+	W <- init.mask$Wi;
+	H <- init.mask$Hi;
+	Wm <- init.mask$Wm;
+	Hm <- init.mask$Hm;
+
+	alpha <- c(as.double(alpha), rep(0., 3))[1:3];
+	beta <- c(as.double(beta), rep(0., 3))[1:3];
+	method.code <- get.method.code(method, loss);
+
 	min.k <- min(dim(A));
 	A.isNA <- is.na(A);
 	A.anyNA <- any(A.isNA); # anyNA is depreciated in new version of R
@@ -103,99 +153,63 @@ nnmf <- function(
 		min.k <- min(min.k, ncol(A) - rowSums(A.isNA), nrow(A) - colSums(A.isNA));
 		}
 	rm(A.isNA);
-	if (check.k && k > min.k)
-		stop(paste("k larger than", min.k, "is not recommended, unless properly masked or regularized."));
-	if (eta < 0) eta <- median(A);
-	if ('brunet' == method && (A.anyNA || !is.null(W0) || !is.null(H0) || !is.null(Wm) || !is.null(Hm)))
-		stop("When any of W0, H0, Wm, Hm is not NULL or NA in A, method must be 'nnls'.");
+	if (check.k && k > min.k && all(c(alpha, beta) == 0))
+		stop(paste("k larger than", min.k, "is not recommended, unless properly masked or regularized.
+				Set check.k = FALSE if you want to skip this checking."));
 
 	if (n.threads < 0L) n.threads <- 0L; # let openMP decide
+	if (is.logical(trace)) {
+		trace <- as.integer(trace) - 1L;
+		}
 
 	run.time <- system.time(
-		out <- switch(method,
-			'nnls' = {
-				if (!any(is.na(A)) && all(c(is.null(W0), is.null(H0), is.null(Wm), is.null(Hm)))) {
-					# lighter and faster routine
-					.Call('NNLM_nmf_nnls', 
-						A, as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
-						as.double(rel.tol), as.integer(n.threads), as.logical(show.progress), as.logical(show.warning),
-						PACKAGE = 'NNLM'
-						)
-				} else {
-					# transform NULLs to empty matrices
-					if (is.null(W0)) W0 <- matrix(0., 0, 0);
-					if (is.null(H0)) H0 <- matrix(0., 0, 0);
-					if (is.null(Wm)) Wm <- matrix(FALSE, 0, 0);
-					if (is.null(Hm)) Hm <- matrix(FALSE, 0, 0);
-					if (is.null(W.init)) W.init <- matrix(0., 0, 0);
-					.Call('NNLM_nnmf_generalized', 
-						A, W0, t(H0), W.init, Wm, t(Hm), as.integer(k), as.double(eta), as.double(beta), as.integer(max.iter), 
-						as.double(rel.tol), as.integer(n.threads), as.logical(show.progress), as.logical(show.warning), 
-						500L, 1e-8, FALSE, PACKAGE = 'NNLM'
-						)
-					}
-				},
-			'brunet' = .Call('NNLM_nmf_brunet', 
-				A, as.integer(k), as.integer(max.iter), as.double(rel.tol), 
-				as.integer(n.threads), as.logical(show.progress), as.logical(show.warning),
-				PACKAGE = 'NNLM'
-				)
+		out <- .Call('NNLM_nnmf', A, as.integer(k),
+			init.mask$Wi, init.mask$Hi, init.mask$Wm, init.mask$Hm,
+			alpha, beta, as.integer(max.iter), as.double(rel.tol),
+			as.integer(n.threads), as.integer(trace), as.logical(show.warning),
+			as.integer(inner.max.iter), as.double(inner.rel.tol), as.integer(method.code),
+			PACKAGE = 'NNLM'
 			)
 		);
+	names(out) <- c('W', 'H', 'mse', 'mkl', 'target.loss', 'average.epochs');
+	out$mse <- as.vector(out$mse);
+	out$mkl <- as.vector(out$mkl);
+	out$target.loss <- as.vector(out$target.loss);
+	out$average.epochs <- as.vector(out$average.epochs);
+
 	# add row/col names back
+	colnames(out$W) <- colnames(init.mask$Wi);
+	rownames(out$H) <- rownames(init.mask$Hi);
 	if (!is.null(rownames(A))) rownames(out$W) <- rownames(A);
 	if (!is.null(colnames(A))) colnames(out$H) <- colnames(A);
-	if (length(W0) > 0) {
-		out$W0 <- W0;
-		out$H1 <- out$H[-seq_len(k), ];
-		rownames(out$H1) <- colnames(W0);
-		out$H <- out$H[seq_len(k), ];
-		}
-	if (length(H0) > 0) {
-		out$W1 <- out$W[, -seq_len(k)];
-		colnames(out$W1) <- rownames(W0);
-		out$H0 <- H0;
-		out$W <- out$W[, seq_len(k)];
+	rm(init.mask);
+
+	if (W.norm > 0) {
+		if (is.finite(W.norm)) {
+			W.scale <- sapply(out$W, function(x) sum(x^W.norm)^(1./W.norm));
+		} else {
+			W.scale <- sapply(out$W, max);
+			}
+		out$W <- out$W %*% diag(1./W.scale);
+		out$H <- diag(W.scale) %*% out$H
 		}
 
-	names(out)[4] <- 'target.error';
-	out$iteration <- length(out$error);
-	out$method <- method;
-	out$target.error <- as.vector(out$target.error);
-	out$error <- as.vector(out$error);
-	out$rel.tol <- abs(diff(tail(out$target.error,2))) / (tail(out$target.error, 1)+1e-6);
-	out$target.measure <- ifelse('brunet' == method, 
-		'Kullback-Leibler Divergence',
-		ifelse(0 == eta && 0 == beta, 'Root Mean Square Error',
-			'Penalized Root Mean Square Error'));
-	out$system.time <- run.time;
-
+	out$n.iteration <- length(out$mse);
+	out$run.time <- run.time;
+	out$options <- list(
+		method = method,
+		loss = loss,
+		alpha = alpha,
+		beta = beta,
+		init = init,
+		mask = mask,
+		n.threads = n.threads,
+		trace = trace,
+		max.iter = max.iter,
+		rel.tol = rel.tol,
+		inner.max.iter = inner.max.iter,
+		inner.rel.tol = inner.rel.tol
+		);
+	out$call <- match.call();
 	return(structure(out, class = 'nnmf'));
-	}
-
-
-# check if input is a matrix, non-negative and no-missing
-#
-# @param A Input matrix to be check
-# @return A properly modified matrix
-check.input.matrix <- function(A, check.missing = TRUE) {
-	input.name <- as.character(substitute(A));
-	if (!is.matrix(A)) A <- as.matrix(A);
-	if (!is.numeric(A)) stop(sprintf("Matrix %s must be numeric", input.name));
-	if (!is.double(A)) storage.mode(A) <- 'double';
-	if (any(A[!is.na(A)] < 0)) stop(sprintf("Matrix %s must be non-negative.", input.name));
-	if (check.missing && any(is.na(A))) stop(sprintf("Matrix %s contains missing values.", input.name));
-	return(A);
-	}
-
-# check if input is a mask matrix, non-negative and no-missing
-#
-# @param A Input matrix to be check
-# @return A properly modified matrix
-check.input.mask <- function(A) {
-	input.name <- as.character(substitute(A));
-	if (!is.matrix(A)) A <- as.matrix(A);
-	if (!is.logical(A)) storage.mode(A) <- 'logical';
-	if (any(is.na(A))) stop(sprintf("Matrix %s contains missing values.", input.name));
-	return(A);
 	}
