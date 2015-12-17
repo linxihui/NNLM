@@ -131,12 +131,12 @@ reformat.input <- function(init, mask, n, m, k) {
 
 	K <- k + kW0 + kH0;
 
-	is.W.masked <- !all(sapply(mask[c('W', 'W0', 'W1')], is.empty));
-	is.H.masked <- !all(sapply(mask[c('H', 'H0', 'H1')], is.empty));
-	nWm <- ifelse(is.W.masked, n, 0);
-	mHm <- ifelse(is.H.masked, m, 0);
-	dim.mask <- list('W' = c(nWm, k), 'W0' = c(nWm, kW0), 'W1' = c(nWm, kH0), 
-		'H' = c(k, mHm), 'H1' = c(kW0, mHm), 'H0' = c(kH0, mHm));
+	ew <- !all(sapply(mask[c('W', 'W0', 'W1')], is.empty));
+	eh <- !all(sapply(mask[c('H', 'H0', 'H1')], is.empty));
+	dim.mask <- list(
+		'W' = c(n, k*ew), 'W0' = c(n, kW0*ew), 'W1' = c(n, kH0*ew), 
+		'H' = c(k*eh, m), 'H1' = c(kW0*eh, m), 'H0' = c(kH0*eh, m)
+		);
 
 	for (mat in c('W', 'W0', 'W1', 'H' ,'H0', 'H1')) {
 		check.matrix(mask[[mat]], dim.mask[[mat]], 'logical', TRUE, paste0('mask$', mat));
@@ -144,18 +144,20 @@ reformat.input <- function(init, mask, n, m, k) {
 			mask[[mat]] <- matrix(FALSE, dim.mask[[mat]][[1]], dim.mask[[mat]][[2]]);
 		}
 
-	is.W.not.empty <- !all(sapply(init[c('W', 'W0', 'W1')], is.empty));
-	is.H.not.empty <- !all(sapply(init[c('H', 'H0', 'H1')], is.empty));
-	nWi <- ifelse(is.W.not.empty, n, nWm);
-	mHi <- ifelse(is.H.not.empty, m, mHm);
+	ew <- !all(sapply(init[c('W', 'W0', 'W1')], is.empty));
+	eh <- !all(sapply(init[c('H', 'H0', 'H1')], is.empty));
 	dim.init <- list(
-		'W' = c(nWi, k), 'W0' = c(nWi, kW0), 'W1' = c(nWi, kH0), 
-		'H' = c(k, mHi), 'H1' = c(kW0, mHi), 'H0' = c(kH0, mHi)
+		'W' = c(n, k*ew), 'W0' = c(n, kW0*ew), 'W1' = c(n, kH0*ew), 
+		'H' = c(k*eh, m), 'H1' = c(kW0*eh, m), 'H0' = c(kH0*eh, m)
 		);
 	for (mat in c('W', 'W0', 'W1', 'H' ,'H0', 'H1')) {
 		check.matrix(init[[mat]], dim.init[[mat]], 'numeric', TRUE, paste0('init$', mat));
 		if (is.empty(init[[mat]])) {
-			init[[mat]] <- matrix(runif(prod(dim.init[[mat]])), dim.init[[mat]][[1]], dim.init[[mat]][[2]]);
+			init[[mat]] <- matrix(
+				runif(prod(dim.init[[mat]]), max = 0.01),
+				dim.init[[mat]][[1]],
+				dim.init[[mat]][[2]]
+				);
 			init[[mat]][mask[[mat]]] <- 0;
 			}
 		if (!is.double(init[[mat]]))
