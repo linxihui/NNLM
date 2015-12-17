@@ -3,7 +3,7 @@
 #' Non-negative matrix factorization(NMF or NNMF) using sequential coordinate-wise descent or multiplicative updates
 #'
 #' The problem of non-negative matrix factorization is to find \code{W, H, W_1, H_1}, such that \cr
-#' 		\deqn{A = W H + W_0 H_1 + W_1 H_0 + noise = [W\, W_0\, W_1] [H^T\, H_1^T\, H_0^T]^T}\cr
+#' 		\deqn{A = W H + W_0 H_1 + W_1 H_0 + noise = [W W_0 W_1] [H' H'_1 H'_0]'}\cr
 #' where \eqn{W_0}, \eqn{H_0} are known matrices, which are NULLs in most application case.
 #' In tumour content deconvolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
 #' is desired pure cancer profile. One also set \eqn{H_0} to a row matrix of 1, and thus \eqn{W_1}
@@ -20,13 +20,16 @@
 #'
 #' To simplify the notations, we denote right hand side of the above equation as \eqn{W H}.
 #' The problem to solved using square error is\cr
-#' 	  \deqn{argmin_{W \ge 0, H \ge 0} L(A, W H) + J(W, \alpha) + J(H^T, \beta)}\cr
-#' where \eqn{L(x, y)} is a loss function either a square loss \eqn{1/2 ||x-y||_2^2} or a Kullback-Leibler
-#' divergence \eqn{x \log (x/y) - x - y}. The formal one is usually better for symmetric distribution, while
+#' 	  \deqn{argmin_{W \ge 0, H \ge 0} L(A, W H) + J(W, \alpha) + J(H', \beta)}\cr
+#' where \eqn{L(x, y)} is a loss function either a square loss
+#' 		\deqn{1/2 ||x-y||_2^2}
+#' or a Kullback-Leibler divergence
+#' 		\deqn{x \log (x/y) - x - y.}
+#' The formal one is usually better for symmetric distribution, while
 #' the later one is more suitable for skewed distribution, especially for count data as it can be derived from 
 #' Possion distributed observation. The penalty function \eqn{J} is a composition of three types of penalties, 
 #' which aim to minizing L2 norm, maxizing angles between hidden features (columns of W and rows of H) and
-#' L1 norm (sparsity).  The parameters \eqn{\alpha,\, \beta} of length 3 indicates the amount of penalties. 
+#' L1 norm (sparsity).  The parameters \eqn{\alpha}, \eqn{\beta} of length 3 indicates the amount of penalties. 
 #'
 #' When \code{method == 'scd'}, a sequential coordinate-wise descent algorithm is used when solving \eqn{W}
 #' and \eqn{H} alternatively, which are non-negative regression problem. The \code{inner.max.iter} and
@@ -68,7 +71,7 @@
 #' @return A list with components
 #' 	\itemize{
 #' 		\item W              : left matrix, including known W0 and W1 if available, i.e., column stacked as \eqn{[W, W0, W1]}
-#' 		\item H              : right matrix, including H1 and known H0 if available, i.e. row stacked as \eqn{[H^T, H1^T, H0^T]^T}
+#' 		\item H              : right matrix, including H1 and known H0 if available, i.e. row stacked as \eqn{[H', H1', H0']'}
 #' 		\item mse            : a vector of mean squared errors through iterations
 #' 		\item mkl            : a vector of mean KL-divergence through iterations
 #' 		\item target.loss    : target for minimization, which is mean KL-divergence (if \code{loss == 'mkl'}) or half of mean squared error
@@ -84,10 +87,10 @@
 #'
 #' Franc, V. C., Hlavac, V. C., Navara, M. (2005). Sequential Coordinate-Wise Algorithm for the Non-negative Least Squares Problem.
 #' Proc. Int'l Conf. Computer Analysis of Images and Patterns. Lecture Notes in Computer Science 3691. p. 407.\cr
-#' 
+#' \cr
 #' Lee, Daniel D., and H. Sebastian Seung. 1999. "Learning the Parts of Objects by Non-Negative Matrix Factorization."
 #' Nature 401: 788-91.\cr
-#'
+#' \cr
 #' Pascual-Montano, Alberto, J.M. Carazo, Kieko Kochi, Dietrich Lehmann, and Roberto D.Pascual-Marqui. 2006. 
 #' "Nonsmooth Nonnegative Matrix Factorization (NsNMF)." IEEE Transactions on Pattern Analysis and Machine Intelligence 28 (3): 403-14.\cr
 #'
@@ -137,10 +140,11 @@ nnmf <- function(
 	m <- ncol(A);
 
 	init.mask <- reformat.input(init, mask, n, m, k);
-	W <- init.mask$Wi;
-	H <- init.mask$Hi;
+	Wi <- init.mask$Wi;
+	Hi <- init.mask$Hi;
 	Wm <- init.mask$Wm;
 	Hm <- init.mask$Hm;
+	k <- init.mask$K;
 
 	alpha <- c(as.double(alpha), rep(0., 3))[1:3];
 	beta <- c(as.double(beta), rep(0., 3))[1:3];
@@ -164,7 +168,7 @@ nnmf <- function(
 
 	run.time <- system.time(
 		out <- .Call('NNLM_nnmf', A, as.integer(k),
-			init.mask$Wi, init.mask$Hi, init.mask$Wm, init.mask$Hm,
+			Wi, Hi, Wm, Hm,
 			alpha, beta, as.integer(max.iter), as.double(rel.tol),
 			as.integer(n.threads), as.integer(trace), as.logical(show.warning),
 			as.integer(inner.max.iter), as.double(inner.rel.tol), as.integer(method.code),
