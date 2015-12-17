@@ -1,3 +1,4 @@
+//disable armadillo matrix/vector boundary checking
 #define ARMA_NO_DEBUG
 
 //SUPPORT_OPENMP is defined by R SHLIB
@@ -5,8 +6,9 @@
 #include <omp.h>
 #endif
 
-//[[Rcpp::depends(RcppArmadillo)]]
 #include <bits/stdc++.h> 
+
+//[[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
 //[[Rcpp::depends(RcppProgress)]]
@@ -15,46 +17,42 @@
 #include <Rcpp.h>
 #include <R.h>
 
-#define NNLS_REL_TOL 1e-6
-#define NNMF_REL_TOL 1e-4
+#define NNLM_REL_TOL 1e-8
+#define NNMF_REL_TOL 1e-6
 #define MAX_ITER 500
+#define NNMF_INNER_MAX_ITER 10
 #define N_THREADS 1
-#define L2_ETA 0
-#define L1_BETA 0
-#define SHOW_PROGRESS false
+#define TRACE 0
 #define SHOW_WARNING true
-#define TRACE_ERROR false
+#define DEFAULT_METHOD 1
 
 //using namespace Rcpp;
 using namespace arma;
 
-double mse(const mat & A, const mat & W, const mat & H, const mat & W1, const mat & H2);
+Rcpp::List nnlm(const mat & x, const mat & y, const vec & alpha, const umat & mat, int max_iter = MAX_ITER,
+	double rel_tol = NNLM_REL_TOL, int n_threads = N_THREADS, int method = DEFAULT_METHOD);
 
-mat nnls_solver(const mat & H, mat mu, const umat & mask, int max_iter = MAX_ITER, 
-	double rel_tol = NNLS_REL_TOL, int n_threads = N_THREADS);
+Rcpp::List nnmf(const mat & A, mat W, mat H, umat Wm, const umat & Hm, const vec & alpha, const vec & beta,
+	int max_iter = MAX_ITER, double rel_tol = NNMF_REL_TOL, int n_threads = N_THREADS, int trace = TRACE,
+	bool show_warning = SHOW_WARNING, int inner_max_iter = NNMF_INNER_MAX_ITER,
+	double inner_rel_tol = NNLM_REL_TOL, int method = DEFAULT_METHOD);
 
-mat nnls_solver_without_missing(mat & WtW, mat & WtA,
-	const mat & A, const mat & W, const mat & W1, const mat & H2, const umat & mask,
-	const double & eta = L2_ETA, const double & beta = L1_BETA, int max_iter = MAX_ITER, 
-	double rel_tol = NNLS_REL_TOL, int n_threads = N_THREADS);
+int update(mat & H, const mat & Wt, const mat & A, const umat & mask, const vec & beta,
+	int max_iter = NNMF_INNER_MAX_ITER, double rel_tol = NNLM_REL_TOL,
+	int n_threads = N_THREADS, int method = DEFAULT_METHOD);
 
-mat nnls_solver_with_missing(const mat & A, const mat & W, const mat & W1, const mat & H2, const umat & mask, 
-	const double & eta = L2_ETA, const double & beta = L1_BETA, int max_iter = MAX_ITER, 
-	double rel_tol = NNLS_REL_TOL, int n_threads = N_THREADS);
+int update_with_missing(mat & H, const mat & Wt, const mat & A, const umat & mask, const vec & beta,
+	int max_iter = NNMF_INNER_MAX_ITER, double rel_tol = NNLM_REL_TOL,
+	int n_threads = N_THREADS, int method = DEFAULT_METHOD);
 
-Rcpp::List nnls(const mat & A, const mat & b, int max_iter = MAX_ITER, double tol = NNMF_REL_TOL, 
-	int n_threads = N_THREADS, bool show_progress = SHOW_PROGRESS);
+int scd_ls_update(subview_col<double> Hj, const mat & WtW, vec & mu, const subview_col<uword> mask,
+	const int & max_iter, const double & rel_tol);
 
-Rcpp::List nmf_nnls(const mat & A, int k, double eta = L2_ETA, double beta = L1_BETA, int max_iter = MAX_ITER, 
-	double tol = NNMF_REL_TOL, int n_threads = N_THREADS, bool show_progress = SHOW_PROGRESS, bool show_warning = SHOW_WARNING);
+int scd_kl_update(subview_col<double> Hj, const mat & Wt, const vec & Aj, const vec & sumW,
+	const subview_col<uword> mask, const vec & beta, const int & max_iter, const double & rel_tol);
 
-Rcpp::List nnmf_generalized(const mat & A, const mat & W1, const mat & H2, mat W, umat Wm, umat Hm,
-	int k, double eta = L2_ETA, double beta = L1_BETA, int max_iter = MAX_ITER, double rel_tol = NNMF_REL_TOL, 
-	int n_threads = N_THREADS, bool show_progress = SHOW_PROGRESS, bool show_warning = SHOW_WARNING,
-	int nnls_max_iter = MAX_ITER, double nnls_rel_tol = NNLS_REL_TOL, int trace = TRACE_ERROR);
+int lee_ls_update(subview_col<double> Hj, const mat & WtW, const vec & WtAj, const double & beta3,
+	const subview_col<uword> mask, const int & max_iter, const double & rel_tol);
 
-Rcpp::List nmf_brunet(const mat & A, int k, int max_iter = MAX_ITER , double rel_tol = NNMF_REL_TOL, 
-	int n_threads = N_THREADS, bool show_progress = SHOW_PROGRESS, bool show_warning = SHOW_WARNING);
-
-mat get_H_brunet(const mat & A, const mat & W, int max_iter = MAX_ITER, double rel_tol = NNMF_REL_TOL, 
-	int n_threads = N_THREADS, bool show_progress = SHOW_PROGRESS, bool show_warning = SHOW_WARNING);
+int lee_kl_update(subview_col<double> Hj, const mat & Wt, const vec & Aj, const vec & sumW,
+	const subview_col<uword> mask, const vec & beta, const int & max_iter, const double & rel_tol);

@@ -4,7 +4,7 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
 
-using namespace Rcpp;
+using namespace arma;
 
 // nnlm
 Rcpp::List nnlm(const mat& x, const mat& y, const vec& alpha, const umat& mask, const mat& beta0, int max_iter, double rel_tol, int n_threads, int method);
@@ -26,27 +26,28 @@ BEGIN_RCPP
 END_RCPP
 }
 // nnmf
-Rcpp::List nnmf(const mat& A, mat W, mat H, umat Wm, const umat& Hm, const vec& alpha, const vec& beta, int max_iter, double rel_tol, int n_threads, int trace, bool show_warning, int inner_max_iter, double inner_rel_tol, int method);
-RcppExport SEXP NNLM_nnmf(SEXP ASEXP, SEXP WSEXP, SEXP HSEXP, SEXP WmSEXP, SEXP HmSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP, SEXP n_threadsSEXP, SEXP traceSEXP, SEXP show_warningSEXP, SEXP inner_max_iterSEXP, SEXP inner_rel_tolSEXP, SEXP methodSEXP) {
+Rcpp::List nnmf(const mat& A, const int k, mat W, mat H, umat Wm, umat Hm, const vec& alpha, const vec& beta, const int max_iter, const double rel_tol, const int n_threads, const int trace, const bool show_warning, const int inner_max_iter, const double inner_rel_tol, const int method);
+RcppExport SEXP NNLM_nnmf(SEXP ASEXP, SEXP kSEXP, SEXP WSEXP, SEXP HSEXP, SEXP WmSEXP, SEXP HmSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP, SEXP n_threadsSEXP, SEXP traceSEXP, SEXP show_warningSEXP, SEXP inner_max_iterSEXP, SEXP inner_rel_tolSEXP, SEXP methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< const mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
     Rcpp::traits::input_parameter< mat >::type W(WSEXP);
     Rcpp::traits::input_parameter< mat >::type H(HSEXP);
     Rcpp::traits::input_parameter< umat >::type Wm(WmSEXP);
-    Rcpp::traits::input_parameter< const umat& >::type Hm(HmSEXP);
+    Rcpp::traits::input_parameter< umat >::type Hm(HmSEXP);
     Rcpp::traits::input_parameter< const vec& >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const vec& >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
-    Rcpp::traits::input_parameter< double >::type rel_tol(rel_tolSEXP);
-    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
-    Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
-    Rcpp::traits::input_parameter< bool >::type show_warning(show_warningSEXP);
-    Rcpp::traits::input_parameter< int >::type inner_max_iter(inner_max_iterSEXP);
-    Rcpp::traits::input_parameter< double >::type inner_rel_tol(inner_rel_tolSEXP);
-    Rcpp::traits::input_parameter< int >::type method(methodSEXP);
-    __result = Rcpp::wrap(nnmf(A, W, H, Wm, Hm, alpha, beta, max_iter, rel_tol, n_threads, trace, show_warning, inner_max_iter, inner_rel_tol, method));
+    Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type rel_tol(rel_tolSEXP);
+    Rcpp::traits::input_parameter< const int >::type n_threads(n_threadsSEXP);
+    Rcpp::traits::input_parameter< const int >::type trace(traceSEXP);
+    Rcpp::traits::input_parameter< const bool >::type show_warning(show_warningSEXP);
+    Rcpp::traits::input_parameter< const int >::type inner_max_iter(inner_max_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type inner_rel_tol(inner_rel_tolSEXP);
+    Rcpp::traits::input_parameter< const int >::type method(methodSEXP);
+    __result = Rcpp::wrap(nnmf(A, k, W, H, Wm, Hm, alpha, beta, max_iter, rel_tol, n_threads, trace, show_warning, inner_max_iter, inner_rel_tol, method));
     return __result;
 END_RCPP
 }

@@ -1,10 +1,10 @@
 #include "nnlm.h"
 
 //[[Rcpp::export]]
-Rcpp::List nnmf(const mat & A, mat W, mat H, umat Wm, const umat & Hm,
-	const vec & alpha, const vec & beta, int max_iter, double rel_tol, 
-	int n_threads, int trace, bool show_warning, int inner_max_iter = 1, 
-	double inner_rel_tol = 1e-9, int method = 1)
+Rcpp::List nnmf(const mat & A, const int k, mat W, mat H, umat Wm, umat Hm,
+	const vec & alpha, const vec & beta, const int max_iter, const double rel_tol, 
+	const int n_threads, const int trace, const bool show_warning, const int inner_max_iter, 
+	const double inner_rel_tol, const int method)
 {
 	/******************************************************************************************************
 	 *              Non-negative Matrix Factorization(NNMF) using alternating scheme
@@ -13,31 +13,31 @@ Rcpp::List nnmf(const mat & A, mat W, mat H, umat Wm, const umat & Hm,
 	 * 	Decompose matrix A such that
 	 * 		A = W H
 	 * Arguments:
-	 * 	A             : Matrix to be decomposed
-	 * 	W, H          : Initial matrices of W and H, where ncol(W) = nrow(H) = k
-	 * 	Wm, Hm        : Masks of W and H, s.t. masked entries are no-updated and fixed to inital values
-	 * 	alpha         : [L2, anlge, L1] regularization on W (non-masked entries)
-	 * 	beta          : [L2, anlge, L1] regularization on H (non-masked entries)
-	 * 	max_iter      : Maximum number of iteration
-	 * 	rel_tol       : Relative tolerance between two successive iterations, = |e2-e1|/avg(e1, e2)
-	 * 	n_threads     : Number of threads (openMP)
-	 * 	show_progress : If to show progress, useful for long computation, suppressed if trace > 0 (on)
-	 * 	trace         : # of iteractions for each print out. No trace if trace <= 0
-	 * 	show_warning  : If to show warning if targeted `tol` is not reached
-	 * 	nnls_max_iter : Maximum number of iterations passed to each inner W or H matrix updating loop
-	 * 	nnls_rel_tol  : Relative tolerance passed to inner W or H matrix updating loop, = |e2-e1|/avg(e1, e2)
-	 * 	method        : Integer of 1, 2, 3 or 4, which encodes methods
-	 * 	              : 1 = sequential coordinate-wise minimization using square loss
-	 * 	              : 2 = Lee's multiplicative update with square loss, which is re-scaled gradient descent
-	 * 	              : 3 = sequentially quadratic approximated minimization with KL-divergence
-	 * 	              : 4 = Lee's multiplicative update with KL-divergence, which is re-scaled gradient descent
+	 * 	A              : Matrix to be decomposed
+	 * 	W, H           : Initial matrices of W and H, where ncol(W) = nrow(H) = k. # of rows/columns of W/H could be 0
+	 * 	Wm, Hm         : Masks of W and H, s.t. masked entries are no-updated and fixed to initial values
+	 * 	alpha          : [L2, angle, L1] regularization on W (non-masked entries)
+	 * 	beta           : [L2, angle, L1] regularization on H (non-masked entries)
+	 * 	max_iter       : Maximum number of iteration
+	 * 	rel_tol        : Relative tolerance between two successive iterations, = |e2-e1|/avg(e1, e2)
+	 * 	n_threads      : Number of threads (openMP)
+	 * 	show_progress  : If to show progress, useful for long computation, suppressed if trace > 0 (on)
+	 * 	trace          : # of iterations for each print out. No trace if trace <= 0
+	 * 	show_warning   : If to show warning if targeted `tol` is not reached
+	 * 	inner_max_iter : Maximum number of iterations passed to each inner W or H matrix updating loop
+	 * 	inner_rel_tol  : Relative tolerance passed to inner W or H matrix updating loop, = |e2-e1|/avg(e1, e2)
+	 * 	method         : Integer of 1, 2, 3 or 4, which encodes methods
+	 * 	               : 1 = sequential coordinate-wise minimization using square loss
+	 * 	               : 2 = Lee's multiplicative update with square loss, which is re-scaled gradient descent
+	 * 	               : 3 = sequentially quadratic approximated minimization with KL-divergence
+	 * 	               : 4 = Lee's multiplicative update with KL-divergence, which is re-scaled gradient descent
 	 * Return:
 	 * 	A list (Rcpp::List) of 
 	 * 		W, H          : resulting W and H matrices
 	 * 		mse_error     : a vector of mean square error (divided by number of non-missings)
 	 * 		mkl_error     : a vector (length = number of iterations) of mean KL-distance
 	 * 		target_error  : a vector of loss (0.5*mse or mkl), plus constraints
-	 * 		average_epoch : a vector of average epoches (one complete swap over W and H)
+	 * 		average_epoch : a vector of average epochs (one complete swap over W and H)
 	 * Author:
 	 * 	Eric Xihui Lin <xihuil.silence@gmail.com>
 	 * Version:
@@ -46,7 +46,7 @@ Rcpp::List nnmf(const mat & A, mat W, mat H, umat Wm, const umat & Hm,
 
 	int n = A.n_rows;
 	int m = A.n_cols;
-	int K = H.n_rows; // decomposition rank k
+	//int k = H.n_rows; // decomposition rank k
 	int N_non_missing = n*m;
 
 	vec mse_err(max_iter), mkl_err(max_iter), terr(max_iter), ave_epoch(max_iter);
@@ -65,13 +65,35 @@ Rcpp::List nnmf(const mat & A, mat W, mat H, umat Wm, const umat & Hm,
 	{
 		non_missing = find_finite(A);
 		N_non_missing = non_missing.n_elem;
-		mkl_err.fill(mean(A.elem(non_missing) % trunc_log(A.elem(non_missing)) - A.elem(non_missing)));
+		mkl_err.fill(mean((A.elem(non_missing)+1e-16) % log(A.elem(non_missing)+1e-16) - A.elem(non_missing)));
 	}
 	else
-		mkl_err.fill(mean(mean(A % arma::trunc_log(A) - A))); // fixed part in KL-dist, mean(A log(A) - A)
+		mkl_err.fill(mean(mean((A+1e-16) % arma::log(A+1e-16) - A))); // fixed part in KL-dist, mean(A log(A) - A)
 
-	inplace_trans(W);
-	inplace_trans(Wm);
+	if (Wm.empty())
+		Wm.resize(0, n);
+	else
+		inplace_trans(Wm);
+	if (Hm.empty())
+		Hm.resize(0, m);
+
+	if (W.empty())
+	{
+		W.randu(k, n);
+		W *= 0.01;
+		if (!Wm.empty())
+			W.elem(find(Wm > 0)).fill(0.0);
+	}
+	else
+		inplace_trans(W);
+
+	if (H.empty())
+	{
+		H.randu(k, m);
+		H *= 0.01;
+		if (!Hm.empty())
+			H.elem(find(Hm > 0)).fill(0.0);
+	}
 
 	if (trace > 0)
 	{
@@ -106,7 +128,7 @@ Rcpp::List nnmf(const mat & A, mat W, mat H, umat Wm, const umat & Hm,
 
 			const mat & Ahat = W.t()*H;
 			mse_err(i) = mean(mean(square((A - Ahat))));
-			mkl_err(i) += mean(mean(-A % trunc_log(Ahat) + Ahat));
+			mkl_err(i) += mean(mean(-(A+1e-16) % log(Ahat+1e-16) + Ahat));
 		}
 
 		ave_epoch(i) = double(total_raw_iter)/(n+m);
@@ -140,7 +162,7 @@ Rcpp::List nnmf(const mat & A, mat W, mat H, umat Wm, const umat & Hm,
 	if (trace > 0)
 	{
 		Rprintf("--------------------------------------------------------------\n");
-		Rprintf("%10s | %10s | %10s | %10s | %10s\n", "Iteration", "MSE", "MKL", "Target", "Rel. Err.");
+		Rprintf("%10s | %10s | %10s | %10s | %10s\n\n", "Iteration", "MSE", "MKL", "Target", "Rel. Err.");
 	}
 
 	if (i >= max_iter)
