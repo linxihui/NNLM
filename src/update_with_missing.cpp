@@ -1,14 +1,13 @@
 #include "nnlm.h"
 
 int update(mat & H, const mat & Wt, const mat & A, const umat & mask,
-	const vec & beta, int max_iter, double rel_tol, int n_threads, int method)
+	const vec & beta, unsigned int max_iter, double rel_tol, int n_threads, int method)
 {
 	// A = W H, solve H
 	// No missing in A, Wt = W^T
 	// method: 1 = scd, 2 = lee_ls, 3 = scd_kl, 4 = lee_kl
 
-	int n = A.n_rows, m = A.n_cols;
-	int K = H.n_rows;
+	unsigned int m = A.n_cols;
 	int total_raw_iter = 0;
 
 	if (n_threads < 0) n_threads = 0;
@@ -22,18 +21,19 @@ int update(mat & H, const mat & Wt, const mat & A, const umat & mask,
 			WtW.diag() += beta(0) - beta(1);
 		if (beta(1) != 0)
 			WtW += beta(1);
+		WtW.diag() += TINY_NUM; // for stability: avoid divided by 0 in scd_ls, scd_kl
 	}
 	else
 		sumW = sum(Wt, 1);
 
 	#pragma omp parallel for num_threads(n_threads) schedule(dynamic) private(mu)
-	for (int j = 0; j < m; j++) // by columns of H
+	for (unsigned int j = 0; j < m; j++) // by columns of H
 	{
 		// break if all entries of col_j are masked
 		if (is_masked && arma::all(mask.col(j)))
 			continue;
 
-		int iter;
+		int iter = 0;
 		if (method == 1)
 		{
 			mu = WtW*H.col(j) - Wt*A.col(j);
@@ -56,15 +56,14 @@ int update(mat & H, const mat & Wt, const mat & A, const umat & mask,
 
 
 int update_with_missing(mat & H, const mat & Wt, const mat & A, const umat & mask,
-	const vec & beta, int max_iter, double rel_tol, int n_threads, int method)
+	const vec & beta, unsigned int max_iter, double rel_tol, int n_threads, int method)
 {
 	// A = W H, solve H
 	// With missings in A, Wt = W^T
 	// method: 1 = scd, 2 = lee_ls, 3 = scd_kl, 4 = lee_kl
 
-	int n = A.n_rows, m = A.n_cols;
-	int K = H.n_rows;
-	int total_raw_iter = 0;
+	unsigned int n = A.n_rows, m = A.n_cols;
+	unsigned int total_raw_iter = 0;
 
 	if (n_threads < 0) n_threads = 0;
 	bool is_masked = mask.n_elem > 0;
@@ -72,7 +71,7 @@ int update_with_missing(mat & H, const mat & Wt, const mat & A, const umat & mas
 	vec mu;
 
 	#pragma omp parallel for num_threads(n_threads) schedule(dynamic) private(WtW, mu)
-	for (int j = 0; j < m; j++) // by columns of H
+	for (unsigned int j = 0; j < m; j++) // by columns of H
 	{
 		// break if all entries of col_j are masked
 		if (is_masked && arma::all(mask.col(j)))
@@ -102,7 +101,7 @@ int update_with_missing(mat & H, const mat & Wt, const mat & A, const umat & mas
 				WtW += beta(1);
 		}
 
-		int iter;
+		int iter = 0;
 		if (method == 1)
 		{
 			mu = WtW*H.col(j)-mu;

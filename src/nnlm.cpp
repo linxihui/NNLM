@@ -2,7 +2,7 @@
 
 //[[Rcpp::export]]
 Rcpp::List nnlm(const mat & x, const mat & y, const vec & alpha, const umat & mask, const mat & beta0,
-	int max_iter, double rel_tol, int n_threads, int method)
+	unsigned int max_iter, double rel_tol, int n_threads, int method)
 {
 	/******************************************************************************************************
 	 *                                    Non-Negative Linear Model
