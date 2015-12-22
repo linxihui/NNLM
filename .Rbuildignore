@@ -3,3 +3,5 @@
 ^.*\.Rproj$
 ^__.*$
 TODO.md
+^.*_cache$
+^.*_files$
