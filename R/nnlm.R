@@ -79,6 +79,7 @@ nnlm <- function(x, y, alpha = rep(0, 3), method = c('scd', 'lee'),
 		warning("x or y have negative values. One should instead use method == 'mse'.");
 
 	is.y.vector <- is.vector(y) && is.atomic(y) && is.numeric(y);
+	y <- as.matrix(y);
 	check.matrix(y, check.na = FALSE);
 	check.matrix(x, check.na = TRUE);
 

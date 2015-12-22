@@ -10,7 +10,7 @@
 #' can be treated as common profile among samples. Use \code{init} to specify \eqn{W_0} and \eqn{H_0}.
 #'
 #' Argument \code{init}, if used, must be a list with entries named as 'W', 'H', 'W0', 'W1', 'H1', 'H0'.
-#' One could specify only a few of them. Only use 'W0' (and its correpondent 'H1') or 'H0' (and its correspondent 'W1')
+#' One could specify only a few of them. Only use 'W0' (and its correspondent 'H1') or 'H0' (and its correspondent 'W1')
 #' for known matrices/profiles.
 #'
 #' Similarly, argument \code{mask}, if used, must be a list entries named as 'W', 'H', 'W0', 'W1', 'H1', 'H0',
@@ -22,20 +22,20 @@
 #' The problem to solved using square error is\cr
 #' 	  \deqn{argmin_{W \ge 0, H \ge 0} L(A, W H) + J(W, \alpha) + J(H', \beta)}\cr
 #' where \eqn{L(x, y)} is a loss function either a square loss
-#' 		\deqn{1/2 ||x-y||_2^2}
+#' 		\deqn{\frac{1}{2} ||x-y||_2^2}
 #' or a Kullback-Leibler divergence
 #' 		\deqn{x \log (x/y) - x - y.}
 #' The formal one is usually better for symmetric distribution, while
 #' the later one is more suitable for skewed distribution, especially for count data as it can be derived from 
-#' Possion distributed observation. The penalty function \eqn{J} is a composition of three types of penalties, 
-#' which aim to minizing L2 norm, maxizing angles between hidden features (columns of W and rows of H) and
+#' Poisson distributed observation. The penalty function \eqn{J} is a composition of three types of penalties, 
+#' which aim to minimizing L2 norm, maximizing angles between hidden features (columns of W and rows of H) and
 #' L1 norm (sparsity).  The parameters \eqn{\alpha}, \eqn{\beta} of length 3 indicates the amount of penalties. 
 #'
 #' When \code{method == 'scd'}, a sequential coordinate-wise descent algorithm is used when solving \eqn{W}
 #' and \eqn{H} alternatively, which are non-negative regression problem. The \code{inner.max.iter} and
 #' \code{inner.rel.tol} is used to control the number of iteration for these non-negative regressions.
 #' This is also applicable to \code{method == 'lee'} (the original algorithm only iteration through all entries
-#' once for each iteration), which is usually faster than the orignial algorithm when \code{loss == 'mse'}.
+#' once for each iteration), which is usually faster than the original algorithm when \code{loss == 'mse'}.
 #' When \code{loss == 'mkl'}, a quadratic approximation to the KL-divergence is used when \code{method == 'scd'}.
 #' Generally, for run time, 'scd' is faster than 'lee' and 'mse' is faster than 'mkl'.
 #'
@@ -45,7 +45,7 @@
 #' @param beta           [L2, angle, L1] regularization on H (non-masked entries)
 #' @param method         Decomposition algorithms, either 'scd' for sequential coordinate-wise descent(default)
 #'                       or 'lee' for Lee's multiplicative algorithm
-#' @param loss           Loss function to use, either 'mse' for mean seqaure error (default) or 'mkl' for mean KL-divergence
+#' @param loss           Loss function to use, either 'mse' for mean square error (default) or 'mkl' for mean KL-divergence
 #' @param init           A list of initial matrices for W and H. One can also supply known matrices W0, H0, and initialize
 #'                       their correspondent matrices H1 and W1. See details
 #' @param mask           A list of mask matrices for W, H, H1 (if \code{init$W0} supplied), W1 (if \code{init$H0} supplied), which
@@ -60,13 +60,13 @@
 #' @param max.iter       Maximum iteration of alternating NNLS solutions to H and W
 #' @param rel.tol        Stop criterion, which is relative tolerance between two successive iterations, = |e2-e1|/avg(e1, e2)
 #' @param n.threads      An integer number of threads/CPUs to use. Default to 1(no parallel). Specify 0 for all cores
-#' @param trace          An integer or logical value to control progress display. \itemize{
-#'                           \item positive value \code{m}: information will be printed every \code{m}-iterations.
-#'                           \item \code{0} or \code{TRUE}(default): a progress bar will be shown
-#'                           \item negative value or \code{FALSE}: no trace at all}
+#' @param trace          An integer indicating how frequent the error should be checked. MSE and MKL error will computed every
+#'                       \code{trace} iterations. If 0 or negative, trace is set to a very large number and only errors of the
+#'                       first and last iterations are checked.
+#' @param verbose        Either 0/FALSE, 1/TRUE or 2, with 0/FALSE/else = no any tracking, 1 == progression bar, 2 == print iteration info.
 #' @param show.warning   If to show warnings when targeted \code{rel.tol} is not reached
 #' @param inner.max.iter Maximum number of iterations passed to each inner W or H matrix updating loop
-#' @param inner.rel.tol  Stop criterion for the inner loop, which is elative tolerance passed to inner W or H matrix updating
+#' @param inner.rel.tol  Stop criterion for the inner loop, which is relative tolerance passed to inner W or H matrix updating
 #'                       i.e., |e2-e1|/avg(e1, e2)
 #' @return A list with components
 #' 	\itemize{
@@ -128,8 +128,9 @@
 nnmf <- function(
 	A, k = 1L, alpha = rep(0,3), beta = rep(0,3), method = c('scd', 'lee'),
 	loss = c('mse', 'mkl'), init = NULL, mask = NULL, W.norm = -1L, check.k = TRUE,
-	max.iter = 500L, rel.tol = 1e-4, n.threads = 1L, trace = 0, show.warning = TRUE,
-	inner.max.iter = ifelse('mse' == loss, 50L, 1L), inner.rel.tol = 1e-9
+	max.iter = 500L, rel.tol = 1e-4, n.threads = 1L, trace = 100/inner.max.iter,
+	verbose = 1L, show.warning = TRUE, inner.max.iter = ifelse('mse' == loss, 50L, 1L),
+	inner.rel.tol = 1e-9
 	) {
 	method <- match.arg(method);
 	loss <- match.arg(loss);
@@ -140,10 +141,6 @@ nnmf <- function(
 	m <- ncol(A);
 
 	init.mask <- reformat.input(init, mask, n, m, k);
-	Wi <- init.mask$Wi;
-	Hi <- init.mask$Hi;
-	Wm <- init.mask$Wm;
-	Hm <- init.mask$Hm;
 	k <- init.mask$K;
 
 	alpha <- c(as.double(alpha), rep(0., 3))[1:3];
@@ -162,20 +159,23 @@ nnmf <- function(
 				Set check.k = FALSE if you want to skip this checking."));
 
 	if (n.threads < 0L) n.threads <- 0L; # let openMP decide
-	if (is.logical(trace)) {
-		trace <- as.integer(trace) - 1L;
+	if (is.logical(verbose)) {
+		verbose <- as.integer(verbose);
+		}
+	if (trace <= 0) {
+		trace <- 999999L; # only compute error of the 1st and last iteration
 		}
 
 	run.time <- system.time(
 		out <- .Call('NNLM_nnmf', A, as.integer(k),
-			Wi, Hi, Wm, Hm,
+			init.mask$Wi, init.mask$Hi, init.mask$Wm, init.mask$Hm,
 			alpha, beta, as.integer(max.iter), as.double(rel.tol),
-			as.integer(n.threads), as.integer(trace), as.logical(show.warning),
+			as.integer(n.threads), as.integer(verbose), as.logical(show.warning),
 			as.integer(inner.max.iter), as.double(inner.rel.tol), as.integer(method.code),
-			PACKAGE = 'NNLM'
+			as.integer(trace), PACKAGE = 'NNLM'
 			)
 		);
-	names(out) <- c('W', 'H', 'mse', 'mkl', 'target.loss', 'average.epochs');
+	names(out) <- c('W', 'H', 'mse', 'mkl', 'target.loss', 'average.epochs', 'n.iteration');
 	out$mse <- as.vector(out$mse);
 	out$mkl <- as.vector(out$mkl);
 	out$target.loss <- as.vector(out$target.loss);
@@ -198,7 +198,6 @@ nnmf <- function(
 		out$H <- diag(W.scale) %*% out$H
 		}
 
-	out$n.iteration <- length(out$mse);
 	out$run.time <- run.time;
 	out$options <- list(
 		method = method,
@@ -209,6 +208,7 @@ nnmf <- function(
 		mask = mask,
 		n.threads = n.threads,
 		trace = trace,
+		verbose = verbose,
 		max.iter = max.iter,
 		rel.tol = rel.tol,
 		inner.max.iter = inner.max.iter,

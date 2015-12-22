@@ -1,13 +1,13 @@
 #' Methods for nnmf object returned by \code{nnmf}
 #'
 #' @param object        An NNMF object returned by \code{\link{nnmf}}
-#' @param newdata       A new matrix of x. No requred when \code{which == 'A'}
+#' @param newdata       A new matrix of x. No required when \code{which == 'A'}
 #' @param which         Either 'A' (default), 'W' or 'H'
 #' @param method        Either 'scd' or 'lee'. Default to \code{object$options$method}
 #' @param loss          Either 'mse' or 'mkl'. Default to \code{object$options$loss}
 #' @param x             An NNMF object returned by \code{\link{nnmf}}
 #' @param ...           Further arguments passed to 'nnlm' or 'print'
-#' @return 'A' or a class of 'nnlm' for 'predict.nnmf' and no return for 'print'
+#' @return 'A' or a class of 'nnlm' for 'predict.nnmf' and no return for 'print'.
 #'
 #' @examples
 #'
@@ -78,5 +78,3 @@ print.nnmf <- function(x, ...) {
 	print(x$run.time);
 	invisible(NULL);
 	}
-
-# tunning k
