@@ -13,7 +13,7 @@
 \arguments{
 \item{object}{An NNMF object returned by \code{\link{nnmf}}}
 
-\item{newdata}{A new matrix of x. No requred when \code{which == 'A'}}
+\item{newdata}{A new matrix of x. No required when \code{which == 'A'}}
 
 \item{which}{Either 'A' (default), 'W' or 'H'}
 
@@ -26,7 +26,7 @@
 \item{x}{An NNMF object returned by \code{\link{nnmf}}}
 }
 \value{
-'A' or a class of 'nnlm' for 'predict.nnmf' and no return for 'print'
+'A' or a class of 'nnlm' for 'predict.nnmf' and no return for 'print'.
 }
 \description{
 Methods for nnmf object returned by \code{nnmf}

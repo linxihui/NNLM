@@ -7,8 +7,9 @@
 nnmf(A, k = 1L, alpha = rep(0, 3), beta = rep(0, 3), method = c("scd",
   "lee"), loss = c("mse", "mkl"), init = NULL, mask = NULL,
   W.norm = -1L, check.k = TRUE, max.iter = 500L, rel.tol = 1e-04,
-  n.threads = 1L, trace = 0, show.warning = TRUE,
-  inner.max.iter = ifelse("mse" == loss, 50L, 1L), inner.rel.tol = 1e-09)
+  n.threads = 1L, trace = 100/inner.max.iter, verbose = 1L,
+  show.warning = TRUE, inner.max.iter = ifelse("mse" == loss, 50L, 1L),
+  inner.rel.tol = 1e-09)
 }
 \arguments{
 \item{A}{A matrix to be decomposed}
@@ -22,7 +23,7 @@ nnmf(A, k = 1L, alpha = rep(0, 3), beta = rep(0, 3), method = c("scd",
 \item{method}{Decomposition algorithms, either 'scd' for sequential coordinate-wise descent(default)
 or 'lee' for Lee's multiplicative algorithm}
 
-\item{loss}{Loss function to use, either 'mse' for mean seqaure error (default) or 'mkl' for mean KL-divergence}
+\item{loss}{Loss function to use, either 'mse' for mean square error (default) or 'mkl' for mean KL-divergence}
 
 \item{init}{A list of initial matrices for W and H. One can also supply known matrices W0, H0, and initialize
 their correspondent matrices H1 and W1. See details}
@@ -45,16 +46,17 @@ and row-wise minimum numbers of complete observation}
 
 \item{n.threads}{An integer number of threads/CPUs to use. Default to 1(no parallel). Specify 0 for all cores}
 
-\item{trace}{An integer or logical value to control progress display. \itemize{
-\item positive value \code{m}: information will be printed every \code{m}-iterations.
-\item \code{0} or \code{TRUE}(default): a progress bar will be shown
-\item negative value or \code{FALSE}: no trace at all}}
+\item{trace}{An integer indicating how frequent the error should be checked. MSE and MKL error will computed every
+\code{trace} iterations. If 0 or negative, trace is set to a very large number and only errors of the
+first and last iterations are checked.}
+
+\item{verbose}{Either 0/FALSE, 1/TRUE or 2, with 0/FALSE/else = no any tracking, 1 == progression bar, 2 == print iteration info.}
 
 \item{show.warning}{If to show warnings when targeted \code{rel.tol} is not reached}
 
 \item{inner.max.iter}{Maximum number of iterations passed to each inner W or H matrix updating loop}
 
-\item{inner.rel.tol}{Stop criterion for the inner loop, which is elative tolerance passed to inner W or H matrix updating
+\item{inner.rel.tol}{Stop criterion for the inner loop, which is relative tolerance passed to inner W or H matrix updating
 i.e., |e2-e1|/avg(e1, e2)}
 }
 \value{
@@ -85,7 +87,7 @@ is desired pure cancer profile. One also set \eqn{H_0} to a row matrix of 1, and
 can be treated as common profile among samples. Use \code{init} to specify \eqn{W_0} and \eqn{H_0}.
 
 Argument \code{init}, if used, must be a list with entries named as 'W', 'H', 'W0', 'W1', 'H1', 'H0'.
-One could specify only a few of them. Only use 'W0' (and its correpondent 'H1') or 'H0' (and its correspondent 'W1')
+One could specify only a few of them. Only use 'W0' (and its correspondent 'H1') or 'H0' (and its correspondent 'W1')
 for known matrices/profiles.
 
 Similarly, argument \code{mask}, if used, must be a list entries named as 'W', 'H', 'W0', 'W1', 'H1', 'H0',
@@ -97,20 +99,20 @@ To simplify the notations, we denote right hand side of the above equation as \e
 The problem to solved using square error is\cr
 	  \deqn{argmin_{W \ge 0, H \ge 0} L(A, W H) + J(W, \alpha) + J(H', \beta)}\cr
 where \eqn{L(x, y)} is a loss function either a square loss
-		\deqn{1/2 ||x-y||_2^2}
+		\deqn{\frac{1}{2} ||x-y||_2^2}
 or a Kullback-Leibler divergence
 		\deqn{x \log (x/y) - x - y.}
 The formal one is usually better for symmetric distribution, while
 the later one is more suitable for skewed distribution, especially for count data as it can be derived from 
-Possion distributed observation. The penalty function \eqn{J} is a composition of three types of penalties, 
-which aim to minizing L2 norm, maxizing angles between hidden features (columns of W and rows of H) and
+Poisson distributed observation. The penalty function \eqn{J} is a composition of three types of penalties, 
+which aim to minimizing L2 norm, maximizing angles between hidden features (columns of W and rows of H) and
 L1 norm (sparsity).  The parameters \eqn{\alpha}, \eqn{\beta} of length 3 indicates the amount of penalties.
 
 When \code{method == 'scd'}, a sequential coordinate-wise descent algorithm is used when solving \eqn{W}
 and \eqn{H} alternatively, which are non-negative regression problem. The \code{inner.max.iter} and
 \code{inner.rel.tol} is used to control the number of iteration for these non-negative regressions.
 This is also applicable to \code{method == 'lee'} (the original algorithm only iteration through all entries
-once for each iteration), which is usually faster than the orignial algorithm when \code{loss == 'mse'}.
+once for each iteration), which is usually faster than the original algorithm when \code{loss == 'mse'}.
 When \code{loss == 'mkl'}, a quadratic approximation to the KL-divergence is used when \code{method == 'scd'}.
 Generally, for run time, 'scd' is faster than 'lee' and 'mse' is faster than 'mkl'.
 }
