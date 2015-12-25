@@ -1,14 +1,15 @@
 Package: NNLM
 Type: Package
-Title: Fast solvers for non-negative linear model/regression (NNLM) and non-negative matrix factorization (NMF or NNMF)
-Description: This is a package for Non-Negative Linear Models. It implements
+Title: Fast and Versatile Non-negative Matrix Factorization
+Description: This is a package for Non-Negative Linear Models (NNLM). It implements
     fast sequential coordinate descent algorithms for non-negative linear regression
     and non-negative matrix factorization. It supports mean square error and Kullback-Leibler divergence loss.
     Many other features are also implemented, including missing value imputation, domain knowledge integration,
-    designed W and H matrices, multiple forms of regularizations.
+    designed W and H matrices and multiple forms of regularizations.
 Version: 0.4.0
 Date: 2015-12-15
-Authors@R: person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre"))
+Authors@R: c(person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre")),
+  person("Paul C Boutros", role = "aut", email = "Paul.Boutros@oicr.on.ca"))
 Depends:
     R (>= 3.0.1)
 Imports:
@@ -23,7 +24,10 @@ NeedsCompilation: yes
 Suggests:
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    mice,
+    missForest,
+    ISOpureR
 VignetteBuilder: knitr
 RoxygenNote: 5.0.0
 License: BSD_2_clause + file LICENSE
