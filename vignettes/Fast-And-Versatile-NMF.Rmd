@@ -1,21 +1,16 @@
 ---
-title: "NNLM: a package for fast and versatile non-negative matrix factorization"
+title: "NNLM: A package For Fast And Versatile Nonnegative Matrix Factorization"
 author: "Eric Xihui Lin"
 date: "`r Sys.Date()`"
 header-includes:
   - \usepackage{amsmath}
 output:
-  pdf_document:
-    toc: true
-    fig_width: 3.5
-    fig_height: 3.5
-    keep_tex: true
   html_document:
     fig_width: 4.5
     fig_height: 4.5
     toc: true
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Fast and versatile NMF}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 bibliography: ref.bib
@@ -220,11 +215,11 @@ many of entries should be small enough to be thresholded as 0.
 ## Complexity and convergence speed
 
 One can easily see that both the sequential coordinate descent (SCD) and Lee's multiplictive algorithms using MSE have complexity of
-$\mathcal{O}\left(\left((m+n)K^2 N_i + 2nmK\right)N_o\right)$, while their KL conterparts
-have complexity of $\mathcal{O}\left(nmK^2N_iN_o\right)$. Here $N_i$ is the number of inner iterations to solve the non-negative linear model and $N_o$ is
+$\mathcal{O}\left(\left((m+n)k^2 N_i + 2nmK\right)N_o\right)$, while their KL conterparts
+have complexity of $\mathcal{O}\left(nmk^2N_iN_o\right)$. Here $N_i$ is the number of inner iterations to solve the non-negative linear model and $N_o$ is
 the number of outer iteration to alternate $W$ and $H$. $N_i x N_o$ is the total number of epochs, i.e., swaps over $W$ and $H$ matrices. Obviously
-algorithm with MSE are faster then the KL based ones (by a factor of $K$) in terms of complexity, and can benefit from multiple
-inner iterations $N_i$ (reducing the expensive computation of $W^TA$ and $AH^T$) as typically $K \ll m, n$, which generally should reduce $N_o$.  On the contrast, algorithm with KL
+algorithm with MSE are faster then the KL based ones (by a factor of $k$) in terms of complexity, and can benefit from multiple
+inner iterations $N_i$ (reducing the expensive computation of $W^TA$ and $AH^T$) as typically $k \ll m, n$, which generally should reduce $N_o$.  On the contrast, algorithm with KL
 has not benefit from $N_i$ due to the re-calculation of $WH$ on each inner iteration.
 Though the SCD and Lee's algorithm are close in terms of complexity, one can stil expect that SCD will converge much faster in practice.
 This is because Lee's multiplicative algorithm is indeed a gradient descent with a special step size (@lee1999) which is first order method,
@@ -236,6 +231,9 @@ while the sequential coordinate-wise is a second order approach like the Newton-
 One can install NNLM like
 
 ```{r install, echo = TRUE, eval = FALSE}
+install.packages("NNLM");
+
+# or get a dev-version from Github
 library(devtools);
 install_github('linxihui/NNLM')
 ```
@@ -279,7 +277,9 @@ and 1 if `loss == 'mkl'`.
 ## Compare different algorithms
 
 ```{r alg-compare,  warning = FALSE}
+library(NNLM);
 set.seed(123);
+
 k <- 15;
 init <- list(W = matrix(runif(nrow(nsclc)*k), ncol = k),
 	H = matrix(runif(ncol(nsclc)*k), nrow = k));
@@ -474,7 +474,7 @@ graphic model introduced in @isopure2013. As argued in the above, NMF can also b
 ```{r isopure-data, fig.align = 'center'}
 set.seed(123);
 if (!require(ISOpureR)) {
-	install.packages('ISOpureR');
+	install.packages('ISOpureR', repos = "http://cran.stat.sfu.ca/");
 	library(ISOpureR);
 	}
 
@@ -545,9 +545,10 @@ nsclc2.hat.nmf <- with(nsclc2.nmf, W %*% H);
 ```{r missing-mic, results = 'hold', fig.show = 'hold', message = FALSE}
 # multivariate imputation by chained equations (MICE)
 if(!require(mice)) {
-	install.packages('mice');
+	install.packages('mice', repos = "http://cran.stat.sfu.ca/");
 	library(mice);
 	}
+
 # logarithm for positivity and the normality assumption
 system.time(nsclc2.mice <- mice(log(nsclc2), m = 1, printFlag = FALSE)); # one imputation
 nsclc2.hat.mice <- exp(as.matrix(complete(nsclc2.mice)));
@@ -556,9 +557,10 @@ nsclc2.hat.mice <- exp(as.matrix(complete(nsclc2.mice)));
 ```{r missing-missforest, results = 'hold', fig.show = 'hold', message = FALSE}
 # imputation using random forest
 if(!require(missForest)) {
-	install.packages('missForest');
+	install.packages('missForest', repos = "http://cran.stat.sfu.ca/");
 	library(missForest);
 	}
+
 system.time(capture.output(nsclc2.missForest <- missForest(log(nsclc2))));
 nsclc2.hat.missForest <- exp(nsclc2.missForest$ximp);
 ```
@@ -605,15 +607,15 @@ plot(nsclc[index], nsclc2.hat.nmf[index], col = 'deepskyblue', cex = 0.3, pch = 
 abline(a = 0, b = 1, lwd = 2, lty = 2)
 ```
 
-## Determine rank $K$ via missing value imputation
+## Determine rank $k$ via missing value imputation
 
-Tuning hyper-parameter is a typical challenge for all unsupervised learning algorithms. The rank $K$ is
+Tuning hyper-parameter is a typical challenge for all unsupervised learning algorithms. The rank $k$ is
 the only but very crucial parameter, which is unknown before hand. @brunet2004 suggests to run
-multiple times of $K$ and uses a consensus matrix to determine $K$. This idea assumes that sample assignment
-to clusters would vary little from run to run if a clustering into $K$ classes is strong. However, this
+multiple times of $k$ and uses a consensus matrix to determine $k$. This idea assumes that sample assignment
+to clusters would vary little from run to run if a clustering into $k$ classes is strong. However, this
 assumption is not validated and the purpose of NMF is not always for clustering. Another idea, brought from
 denoising autoencoder (@dA), is to add noise to matrix $A$, factorize the noisy version and compare
-the reconstructed matrix to the original $A$, and the $K$ that gives the smallest error is picked. This
+the reconstructed matrix to the original $A$, and the $k$ that gives the smallest error is picked. This
 could a general approach for many unsupervised learning algorithms, but in NMF, the choice of 'noise' is not
 easy as the noisy version of $A$ has to be non-negative as well, which implies 'noise' may introduce bias.
 
@@ -621,8 +623,8 @@ easy as the noisy version of $A$ has to be non-negative as well, which implies '
 Given the powerful missing value imputation in NMF, we come up with a novel idea, adapting
 the well known training-validation split idea in supervised learning.
 Some entries are randomly deleted from $A$ and then imputed by NMF with a set
-of $K$'s.  These imputed entries are later compared to their observed values, and the $K$ that gives
-the smallest error will be our choice, as only the correct $K$, if exists, has the right decomposition
+of $k$'s.  These imputed entries are later compared to their observed values, and the $k$ that gives
+the smallest error will be our choice, as only the correct $k$, if exists, has the right decomposition
 that recovers the missing entries.  As contrast to training-validation split in
 supervised learning, due the typically big number of entries in $A$, we have a much large sample size.
 One can also easily adapt the idea of cross validation to this approach.  This idea should be applicable
@@ -630,11 +632,11 @@ to any unsupervised learning methods that supports missing value imputation.
 
 
 To illustrate, we do a simulation study as follows.  As we could see, different runs give consistent
-results. The mean square errors(MSEs) decrease as rank $K$ increase, but the increases rate slows down
-when $K = 3$ (the true rank). Meanwhile, the MSEs for imputed values are minimized at $K = 3$ for all
+results. The mean square errors(MSEs) decrease as rank $k$ increase, but the increases rate slows down
+when $k = 3$ (the true rank). Meanwhile, the MSEs for imputed values are minimized at $k = 3$ for all
 runs.
 
-```{r rank-sim, fig.width = 5, fig.height = 5, fig.align = 'center'}
+```{r rank-sim, fig.width = 5, fig.height = 5, fig.align = 'center', warning = FALSE}
 set.seed(678);
 
 n <- 400;
@@ -668,7 +670,7 @@ To determine the rank, we set a fraction of the complete entries to missing, and
 impute them. MSEs are computed to determine the optimal rank. As from the resulting
 graph below, one can tell that $K = 2$ is the optimal.
 
-```{r rank-nsclc, fig.width = 5, fig.height = 5, fig.align = 'center'}
+```{r rank-nsclc, fig.width = 5, fig.height = 5, fig.align = 'center', warning = FALSE}
 set.seed(567);
 
 plot(0, xlim = c(1,10), ylim = c(0.4, 1.4), xlab = "Rank", ylab = "MSE")
