@@ -17,7 +17,7 @@ script:
 
 install:
   - ./travis-tool.sh install_aptget r-cran-runit
-  - ./travis-tool.sh install_r Rcpp RcppArmadillo RcppProgress testthat knitr rmarkdown covr
+  - ./travis-tool.sh install_r Rcpp RcppArmadillo RcppProgress testthat knitr rmarkdown covr missForest mice ISOpureR
 
 after_success:
   - Rscript -e 'library(covr);codecov()'
