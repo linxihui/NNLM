@@ -1,29 +1,34 @@
+NNLM-0.4.0: 2015-12-20
+======================
+- Re-designed interface of `nnmf`
+- Re-designed all C++ codes for future extension
+- Added sequential quadratic approximation to KL-divergence
+- Integrated regularization into Lee's multiplicative algorithms
+- More choices of algorithms for nonnegative linear model and renamed `nnls` to `nnlm`
+- Removed `plot` method
+
 NNLM-0.3.0: 2015-11-19
 ======================
-
-- `nmf_partial` was updated to `nnmf_general`, with two more greate features
+- `nmf_partial` was updated to `nnmf_general`, with two more great features
 	* NMF with masked entries in W and H forced to 0
 	* Allowing missing values in matrix A, which is useful for missing
-		value imputaiton and recommendation system.
+		value imputation and recommendation system.
 - Add more potential applications on vignette
 
 NNLM-0.2.0: 2015-11-08
 ======================
-
 - NMF with partially known profiles, which can be used for 
-	tumour content deconvolution with known healty profile
+	tumour content deconvolution with known health profile
 - Updated vignette
 
 NNLM-0.1.0: 2015-11-04
 ======================
-
 - OpenMP support for multiple threading
 - Added progression bar and keyboard interrupt
 - Added a vignette
 
 NNLM-0.0.2: 2015-10-31
 ======================
-
-- A very fast non-negative least sequare solver `nnls`
-- Non-negative matrix factorization using alternativing NNLS and brunet
-- Predict new coefficients from known profile descovered from NMF (`nnmf`)
+- A very fast non-negative least square solver `nnls`
+- Non-negative matrix factorization using alternating NNLS and brunet
+- Predict new coefficients from known profile discovered from NMF (`nnmf`)
