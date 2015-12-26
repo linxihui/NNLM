@@ -1,11 +1,11 @@
 Package: NNLM
 Type: Package
-Title: Fast and Versatile Non-negative Matrix Factorization
+Title: Fast and Versatile Non-Negative Matrix Factorization
 Description: This is a package for Non-Negative Linear Models (NNLM). It implements
     fast sequential coordinate descent algorithms for non-negative linear regression
     and non-negative matrix factorization. It supports mean square error and Kullback-Leibler divergence loss.
     Many other features are also implemented, including missing value imputation, domain knowledge integration,
-    designed W and H matrices and multiple forms of regularizations.
+    designable W and H matrices and multiple forms of regularizations.
 Version: 0.4.0
 Date: 2015-12-15
 Authors@R: c(person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre")),
@@ -13,7 +13,9 @@ Authors@R: c(person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c
 Depends:
     R (>= 3.0.1)
 Imports:
-    Rcpp (>= 0.11.0)
+    Rcpp (>= 0.11.0),
+    stats,
+    utils
 LinkingTo: 
     Rcpp, 
     RcppArmadillo, 

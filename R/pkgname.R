@@ -6,10 +6,9 @@
 # #' @name NNLM
 # NULL
 
-# @importFrom stats predict
-# @exportPattern "^[^\\.]"
-
 #' @import Rcpp
+#' @importFrom stats runif
+#' @importFrom utils tail
 #' @useDynLib NNLM
 NULL
 
