@@ -79,9 +79,9 @@ A list with components
 Non-negative matrix factorization(NMF or NNMF) using sequential coordinate-wise descent or multiplicative updates
 }
 \details{
-The problem of non-negative matrix factorization is to find \code{W, H, W_1, H_1}, such that \cr
-		\deqn{A = W H + W_0 H_1 + W_1 H_0 + noise = [W W_0 W_1] [H' H'_1 H'_0]'}\cr
-where \eqn{W_0}, \eqn{H_0} are known matrices, which are NULLs in most application case.
+The problem of non-negative matrix factorization is to find \eqn{W, H, W_1, H_1}, such that \cr
+\deqn{A = W H + W_0 H_1 + W_1 H_0 + \varepsilon = [W W_0 W_1] [H' H'_1 H'_0]' + \varepsilon}\cr
+where \eqn{W_0}, \eqn{H_0} are known matrices, which are NULLs in most application case and \eqn{\varepsilon} is noise..
 In tumour content deconvolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
 is desired pure cancer profile. One also set \eqn{H_0} to a row matrix of 1, and thus \eqn{W_1}
 can be treated as common profile among samples. Use \code{init} to specify \eqn{W_0} and \eqn{H_0}.
@@ -97,11 +97,18 @@ initialized.
 
 To simplify the notations, we denote right hand side of the above equation as \eqn{W H}.
 The problem to solved using square error is\cr
-	  \deqn{argmin_{W \ge 0, H \ge 0} L(A, W H) + J(W, \alpha) + J(H', \beta)}\cr
+\deqn{argmin_{W \ge 0, H \ge 0} L(A, W H) + J(W, \alpha) + J(H', \beta)}\cr
 where \eqn{L(x, y)} is a loss function either a square loss
-		\deqn{\frac{1}{2} ||x-y||_2^2}
+\deqn{\frac{1}{2} ||x-y||_2^2}
 or a Kullback-Leibler divergence
-		\deqn{x \log (x/y) - x - y.}
+\deqn{x \log (x/y) - x - y,}
+
+and
+\deqn{J(X, \alpha) = \alpha_1 J_1(X) + \alpha_2 J_2(X) + \alpha_3 J_3(X),}
+\deqn{J_1(X) = \frac12 ||X||_F^2 = \frac{1}{2} tr(XX^T),}
+\deqn{J_2(X) = \sum_{i < j} (X_{\cdot i})^TX_{\cdot j} = \frac12 tr(X(E-I)X^T),}
+\deqn{J_3(X) = \sum_{i,j} |x_{ij}| = tr(XE).}
+
 The formal one is usually better for symmetric distribution, while
 the later one is more suitable for skewed distribution, especially for count data as it can be derived from 
 Poisson distributed observation. The penalty function \eqn{J} is a composition of three types of penalties, 

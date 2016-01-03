@@ -1,12 +1,9 @@
 //disable armadillo matrix/vector boundary checking
 #define ARMA_NO_DEBUG
 
-//SUPPORT_OPENMP is defined by R SHLIB
-#ifdef SUPPORT_OPENMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
-
-#include <bits/stdc++.h> 
 
 //[[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>

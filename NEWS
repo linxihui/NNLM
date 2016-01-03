@@ -1,3 +1,8 @@
+NNLM-0.4.1: 2015-12-26
+======================
+- removed GNU g++ specific header for portability
+- minor changes on documentation
+
 NNLM-0.4.0: 2015-12-20
 ======================
 - Re-designed interface of `nnmf`

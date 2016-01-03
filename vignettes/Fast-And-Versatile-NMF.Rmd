@@ -52,11 +52,11 @@ designable factorization, missing value handling are also available.
 
 # Description
 
-This package includes two main functions, `nnls` and `nnmf`.
+This package includes two main functions, `nnlm` and `nnmf`.
 
 ## Sequential coordinate-wise descent (SCD)
 
-`nnls` solves the following non-negative least square (NNLS)
+`nnlm` solves the following non-negative least square (NNLS)
 $$ \min\limits_{\beta \ge 0} ||Y - X\beta||_F, $$
 
 using the following sequentially coordinate-wise algorithm (@voj2005).
@@ -665,10 +665,10 @@ for (col in cols) {
 	}
 ```
 
-For imputation, as in the previous example for NSCLC, we chose $K = 2$. But why?
+For imputation, as in the previous example for NSCLC, we chose $k = 2$. But why?
 To determine the rank, we set a fraction of the complete entries to missing, and
 impute them. MSEs are computed to determine the optimal rank. As from the resulting
-graph below, one can tell that $K = 2$ is the optimal.
+graph below, one can tell that $k = 2$ is the optimal.
 
 ```{r rank-nsclc, fig.width = 5, fig.height = 5, fig.align = 'center', warning = FALSE}
 set.seed(567);

@@ -3,11 +3,11 @@ Type: Package
 Title: Fast and Versatile Non-Negative Matrix Factorization
 Description: This is a package for Non-Negative Linear Models (NNLM). It implements
     fast sequential coordinate descent algorithms for non-negative linear regression
-    and non-negative matrix factorization. It supports mean square error and Kullback-Leibler divergence loss.
+    and non-negative matrix factorization (NMF). It supports mean square error and Kullback-Leibler divergence loss.
     Many other features are also implemented, including missing value imputation, domain knowledge integration,
     designable W and H matrices and multiple forms of regularizations.
-Version: 0.4.0
-Date: 2015-12-15
+Version: 0.4.1
+Date: 2016-01-03
 Authors@R: c(person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre")),
   person("Paul C Boutros", role = "aut", email = "Paul.Boutros@oicr.on.ca"))
 Depends:
