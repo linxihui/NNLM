@@ -6,8 +6,8 @@ Description: This is a package for Non-Negative Linear Models (NNLM). It impleme
     and non-negative matrix factorization (NMF). It supports mean square error and Kullback-Leibler divergence loss.
     Many other features are also implemented, including missing value imputation, domain knowledge integration,
     designable W and H matrices and multiple forms of regularizations.
-Version: 0.4.1
-Date: 2016-01-03
+Version: 0.4.2
+Date: 2018-03-05
 Authors@R: c(person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre")),
   person("Paul C Boutros", role = "aut", email = "Paul.Boutros@oicr.on.ca"))
 Depends:
