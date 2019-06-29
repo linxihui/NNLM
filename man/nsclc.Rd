@@ -9,4 +9,3 @@ This dataset is a random subset (matrix) of micro-array data from a group of Non
 It contains 200 probes / genes (row) for 100 patients / samples (column).
 }
 \keyword{data}
-

@@ -9,7 +9,7 @@
 #' @import Rcpp
 #' @importFrom stats runif
 #' @importFrom utils tail
-#' @useDynLib NNLM
+#' @useDynLib NNLM, .registration = TRUE
 NULL
 
 #' Micro-array data of NSCLC patients

@@ -4,9 +4,10 @@
 \alias{nnlm}
 \title{Non-negative linear model/regression (NNLM)}
 \usage{
-nnlm(x, y, alpha = rep(0, 3), method = c("scd", "lee"), loss = c("mse",
-  "mkl"), init = NULL, mask = NULL, check.x = TRUE, max.iter = 10000L,
-  rel.tol = 1e-12, n.threads = 1L, show.warning = TRUE)
+nnlm(x, y, alpha = rep(0, 3), method = c("scd", "lee"),
+  loss = c("mse", "mkl"), init = NULL, mask = NULL, check.x = TRUE,
+  max.iter = 10000L, rel.tol = 1e-12, n.threads = 1L,
+  show.warning = TRUE)
 }
 \arguments{
 \item{x}{Design matrix}
@@ -30,7 +31,7 @@ contains negative values, one should always use 'mse'}
 
 \item{max.iter}{Maximum number of iterations}
 
-\item{rel.tol}{Stop criterion, relative change on x between two successive iteration. It is equal to \eqn{2*|e2-e1|/(e2+e1)}. 
+\item{rel.tol}{Stop criterion, relative change on x between two successive iteration. It is equal to \eqn{2*|e2-e1|/(e2+e1)}.
 One could specify a negative number to force an exact \code{max.iter} iteration, i.e., not early stop}
 
 \item{n.threads}{An integer number of threads/CPUs to use. Default to 1 (no parallel). Use 0 or a negative value for all cores}
@@ -48,7 +49,7 @@ An object of class 'nnlm', which is a list with components \itemize{
 }
 \description{
 Solving non-negative linear regression problem as \cr
-		\deqn{argmin_{\beta \ge 0} L(y - x\beta) + \alpha_1 ||\beta||_2^2 + 
+		\deqn{argmin_{\beta \ge 0} L(y - x\beta) + \alpha_1 ||\beta||_2^2 +
 		\alpha_2 \sum_{i < j} \beta_{\cdot i}^T \beta_{\cdot j}^T + \alpha_3 ||\beta||_1}
 	where \eqn{L} is a loss function of either square error or Kullback-Leibler divergence.
 }
@@ -78,9 +79,6 @@ y2 <- x2 \%*\% beta + 0.2*matrix(rnorm(50*2), 50, 2);
 beta.hat2 <- nnlm(x, y);
 
 }
-\author{
-Eric Xihui Lin, \email{xihuil.silence@gmail.com}
-}
 \references{
 Franc, V. C., Hlavac, V. C., Navara, M. (2005). Sequential Coordinate-Wise Algorithm for the Non-negative Least Squares Problem.
 Proc. Int'l Conf. Computer Analysis of Images and Patterns. Lecture Notes in Computer Science 3691. p. 407.
@@ -88,7 +86,9 @@ Proc. Int'l Conf. Computer Analysis of Images and Patterns. Lecture Notes in Com
 Lee, Daniel D., and H. Sebastian Seung. 1999. "Learning the Parts of Objects by Non-Negative Matrix Factorization."
 Nature 401: 788-91.
 
-Pascual-Montano, Alberto, J.M. Carazo, Kieko Kochi, Dietrich Lehmann, and Roberto D.Pascual-Marqui. 2006. 
+Pascual-Montano, Alberto, J.M. Carazo, Kieko Kochi, Dietrich Lehmann, and Roberto D.Pascual-Marqui. 2006.
 "Nonsmooth Nonnegative Matrix Factorization (NsNMF)." IEEE Transactions on Pattern Analysis and Machine Intelligence 28 (3): 403-14.
 }
-
+\author{
+Eric Xihui Lin, \email{xihuil.silence@gmail.com}
+}

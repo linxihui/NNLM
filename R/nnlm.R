@@ -1,14 +1,14 @@
 #' Non-negative linear model/regression (NNLM)
 #'
 #' Solving non-negative linear regression problem as \cr
-#' 		\deqn{argmin_{\beta \ge 0} L(y - x\beta) + \alpha_1 ||\beta||_2^2 + 
+#' 		\deqn{argmin_{\beta \ge 0} L(y - x\beta) + \alpha_1 ||\beta||_2^2 +
 #' 		\alpha_2 \sum_{i < j} \beta_{\cdot i}^T \beta_{\cdot j}^T + \alpha_3 ||\beta||_1}
 #' 	where \eqn{L} is a loss function of either square error or Kullback-Leibler divergence.
-#' 
+#'
 #' The linear model is solve in column-by-column manner, which is parallelled. When \eqn{y_{\cdot j}} (j-th column) contains missing values,
 #' only the complete entries are used to solve \eqn{\beta_{\cdot j}}. Therefore, the minimum complete entries of each column should be
 #' not smaller than number of columns of \code{x} when penalty is not used.
-#' 
+#'
 #' \code{method = 'scd'} is recommended, especially when the solution is probably sparse. Though both "mse" and "mkl" loss are supported for
 #' non-negative \code{x} and \code{y}, only "mse" is proper when either \code{y} or \code{x} contains negative value. Note that loss "mkl"
 #' is much slower then loss "mse", which might be your concern when \code{x} and \code{y} is extremely large.
@@ -28,7 +28,7 @@
 #'                      (if \code{init} specified) or 0 (if \code{init} not specified).
 #' @param check.x       If to check the condition number of \code{x} to ensure unique solution. Default to \code{TRUE} but could be slow
 #' @param max.iter      Maximum number of iterations
-#' @param rel.tol       Stop criterion, relative change on x between two successive iteration. It is equal to \eqn{2*|e2-e1|/(e2+e1)}. 
+#' @param rel.tol       Stop criterion, relative change on x between two successive iteration. It is equal to \eqn{2*|e2-e1|/(e2+e1)}.
 #'                      One could specify a negative number to force an exact \code{max.iter} iteration, i.e., not early stop
 #' @param n.threads     An integer number of threads/CPUs to use. Default to 1 (no parallel). Use 0 or a negative value for all cores
 #' @param show.warning  If to shown warnings if exists. Default to TRUE
@@ -45,11 +45,11 @@
 #'
 #' Franc, V. C., Hlavac, V. C., Navara, M. (2005). Sequential Coordinate-Wise Algorithm for the Non-negative Least Squares Problem.
 #' Proc. Int'l Conf. Computer Analysis of Images and Patterns. Lecture Notes in Computer Science 3691. p. 407.
-#' 
+#'
 #' Lee, Daniel D., and H. Sebastian Seung. 1999. "Learning the Parts of Objects by Non-Negative Matrix Factorization."
 #' Nature 401: 788-91.
 #'
-#' Pascual-Montano, Alberto, J.M. Carazo, Kieko Kochi, Dietrich Lehmann, and Roberto D.Pascual-Marqui. 2006. 
+#' Pascual-Montano, Alberto, J.M. Carazo, Kieko Kochi, Dietrich Lehmann, and Roberto D.Pascual-Marqui. 2006.
 #' "Nonsmooth Nonnegative Matrix Factorization (NsNMF)." IEEE Transactions on Pattern Analysis and Machine Intelligence 28 (3): 403-14.
 #'
 #' @author Eric Xihui Lin, \email{xihuil.silence@@gmail.com}
@@ -103,9 +103,9 @@ nnlm <- function(x, y, alpha = rep(0, 3), method = c('scd', 'lee'),
 
 	check.matrix(mask, dm = c(ncol(x), ncol(y)), mode = 'logical', check.na = TRUE);
 	check.matrix(init, dm = c(ncol(x), ncol(y)), check.na = TRUE, check.negative = TRUE);
-	if (length(mask) == 0) 
+	if (length(mask) == 0)
 		mask <- matrix(FALSE, 0, ncol(y));
-	if (length(init) == 0) 
+	if (length(init) == 0)
 		init <- matrix(0.0, 0, ncol(y));
 	# if masked but no initialized, masked entries are thought to fix to 0
 	if (length(mask) != 0 && length(init) == 0)
@@ -116,8 +116,8 @@ nnlm <- function(x, y, alpha = rep(0, 3), method = c('scd', 'lee'),
 	method.code <- get.method.code(method, loss);
 
 	# x, y are passed to C++ function by reference (const arma::mat & type)
-	sol <- .Call('NNLM_nnlm', x, y, as.double(alpha), mask, init, as.integer(max.iter),
-		as.double(rel.tol), as.integer(n.threads), method.code, PACKAGE = 'NNLM');
+	sol <- c_nnlm(x, y, as.double(alpha), mask, init, as.integer(max.iter),
+		as.double(rel.tol), as.integer(n.threads), method.code);
 
 	names(sol) <- c('coefficients', 'n.iteration');
 	if (!is.null(colnames(x)))

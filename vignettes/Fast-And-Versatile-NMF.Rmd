@@ -1,19 +1,20 @@
 ---
-title: "NNLM: A package For Fast And Versatile Nonnegative Matrix Factorization"
+title: 'NNLM: A package For Fast And Versatile Nonnegative Matrix Factorization'
 author: "Eric Xihui Lin"
 date: "`r Sys.Date()`"
-header-includes:
-  - \usepackage{amsmath}
 output:
+  pdf_document:
+    toc: yes
   html_document:
-    fig_width: 4.5
     fig_height: 4.5
-    toc: true
+    fig_width: 4.5
+    toc: yes
+header-includes: \usepackage{amsmath}
+bibliography: ref.bib
 vignette: >
   %\VignetteIndexEntry{Fast and versatile NMF}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
-bibliography: ref.bib
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, echo = FALSE, message = FALSE}

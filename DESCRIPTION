@@ -6,12 +6,12 @@ Description: This is a package for Non-Negative Linear Models (NNLM). It impleme
     and non-negative matrix factorization (NMF). It supports mean square error and Kullback-Leibler divergence loss.
     Many other features are also implemented, including missing value imputation, domain knowledge integration,
     designable W and H matrices and multiple forms of regularizations.
-Version: 0.4.2
-Date: 2018-03-05
-Authors@R: c(person("Xihui", "Lin", email = "xihuil.silence@gmail.com", role = c("aut", "cre")),
+Version: 0.4.3
+Date: 2018-06-129
+Authors@R: c(person("Xihui", "Lin", email = "ericxihuilin@gmail.com", role = c("aut", "cre")),
   person("Paul C Boutros", role = "aut", email = "Paul.Boutros@oicr.on.ca"))
 Depends:
-    R (>= 3.0.1)
+    R (>= 3.5.0)
 Imports:
     Rcpp (>= 0.11.0),
     stats,
@@ -22,6 +22,7 @@ LinkingTo:
     RcppProgress
 LazyData: yes
 LazyLoad: yes
+Encoding: UTF-8
 NeedsCompilation: yes
 Suggests:
     testthat,
@@ -31,7 +32,7 @@ Suggests:
     missForest,
     ISOpureR
 VignetteBuilder: knitr
-RoxygenNote: 5.0.0
+RoxygenNote: 6.1.1
 License: BSD_2_clause + file LICENSE
 BugReports: https://github.com/linxihui/NNLM/issues
 URL: https://github.com/linxihui/NNLM
