@@ -7,8 +7,8 @@ Description: This is a package for Non-Negative Linear Models (NNLM). It impleme
     Many other features are also implemented, including missing value imputation, domain knowledge integration,
     designable W and H matrices and multiple forms of regularizations.
 Version: 0.4.3
-Date: 2018-06-129
-Authors@R: c(person("Xihui", "Lin", email = "ericxihuilin@gmail.com", role = c("aut", "cre")),
+Date: 2018-06-29
+Authors@R: c(person("Xihui", "Lin", email = "ericxihuilin@outlook.com", role = c("aut", "cre")),
   person("Paul C Boutros", role = "aut", email = "Paul.Boutros@oicr.on.ca"))
 Depends:
     R (>= 3.5.0)

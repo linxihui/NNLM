@@ -1,3 +1,8 @@
+NNLM-0.4.: 2019-06-29
+======================
+- fixed testing error
+- fixed cpp flag for openmp
+
 NNLM-0.4.2: 2017-05-17
 ======================
 - bug fixed
@@ -26,7 +31,7 @@ NNLM-0.3.0: 2015-11-19
 
 NNLM-0.2.0: 2015-11-08
 ======================
-- NMF with partially known profiles, which can be used for 
+- NMF with partially known profiles, which can be used for
 	tumour content deconvolution with known health profile
 - Updated vignette
 

@@ -6,3 +6,4 @@ TODO.md
 ^.*_cache$
 ^.*_files$
 ^\.Rproj\.user$
+cran-comments.md

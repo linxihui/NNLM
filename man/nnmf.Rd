@@ -82,7 +82,7 @@ Non-negative matrix factorization(NMF or NNMF) using sequential coordinate-wise 
 The problem of non-negative matrix factorization is to find \eqn{W, H, W_1, H_1}, such that \cr
 \deqn{A = W H + W_0 H_1 + W_1 H_0 + \varepsilon = [W W_0 W_1] [H' H'_1 H'_0]' + \varepsilon}\cr
 where \eqn{W_0}, \eqn{H_0} are known matrices, which are NULLs in most application case and \eqn{\varepsilon} is noise..
-In tumour content deconvolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
+In tumor content deconvolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
 is desired pure cancer profile. One also set \eqn{H_0} to a row matrix of 1, and thus \eqn{W_1}
 can be treated as common profile among samples. Use \code{init} to specify \eqn{W_0} and \eqn{H_0}.
 
