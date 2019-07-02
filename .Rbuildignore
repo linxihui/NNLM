@@ -7,3 +7,4 @@ TODO.md
 ^.*_files$
 ^\.Rproj\.user$
 cran-comments.md
+^CRAN-RELEASE$

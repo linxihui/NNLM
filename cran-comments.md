@@ -26,7 +26,6 @@ CRAN repository db overrides:
   X-CRAN-Comment: Archived on 2019-04-22 as check errors were not
     corrected despite reminders.
 
-The Date field is over a month old.
 
 ## Downstream dependencies
 No Downstream dependencies known.

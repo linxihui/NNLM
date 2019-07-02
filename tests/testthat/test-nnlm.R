@@ -26,7 +26,6 @@ test_that("Testing nnlm result", {
 	expect_equivalent(sol2, b2);
 
 	# case 3: not unexact non-positive solution
-	# set.seed(124);
 	A2 = matrix(c(0.735, -1.428, 0.619, -0.006, -0.686, -0.279, -0.783, -0.779,
 	       -0.375, -0.319, 0.085, -0.768, -0.626, -0.901, 0.664, 0.3,
 	       0.075, 0.206, -0.489, -0.628, -0.047, 0.163, 1.292, -0.464,
@@ -48,6 +47,7 @@ test_that("Testing nnlm result", {
 
 
 test_that("Testing nnlm error message", {
+  suppressWarnings(RNGversion("3.5.0"));
 	set.seed(123);
 	A <- matrix(runif(20), 5, 4);
 	y <- runif(4);

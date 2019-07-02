@@ -20,6 +20,7 @@ vignette: >
 ```{r setup, echo = FALSE, message = FALSE}
 library(knitr);
 opts_chunk$set(cache = TRUE, autodep = TRUE);
+suppressWarnings(RNGversion("3.5.0"));
 ```
 
 
