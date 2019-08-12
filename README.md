@@ -32,4 +32,4 @@ deconvolution, pathway or subnetwork guided NMF for more biological meaningful d
 (Not a built-in function yet and will be in next version shortly, but one can do it easily).
 6. Parallel for one single NMF through openMP.
 
-For more details, one can read the [vignette](https://cran.r-project.org/web/packages/NNLM/vignettes/Fast-And-Versatile-NMF.html) on CRAN.
+For more details, one can read the [vignette](https://cran.r-project.org/web/packages/NNLM/vignettes/Fast-And-Versatile-NMF.pdf) on CRAN.
