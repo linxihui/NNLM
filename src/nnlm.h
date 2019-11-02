@@ -27,10 +27,10 @@
 //using namespace Rcpp;
 using namespace arma;
 
-Rcpp::List nnlm(const mat & x, const mat & y, const vec & alpha, const umat & mat, unsigned int max_iter = MAX_ITER,
+Rcpp::List c_nnlm(const mat & x, const mat & y, const vec & alpha, const umat & mat, unsigned int max_iter = MAX_ITER,
 	double rel_tol = NNLM_REL_TOL, int n_threads = N_THREADS, int method = DEFAULT_METHOD);
 
-Rcpp::List nnmf(const mat & A, const unsigned int k, mat W, mat H, umat Wm, const umat & Hm, const vec & alpha, const vec & beta,
+Rcpp::List c_nnmf(const mat & A, const unsigned int k, mat W, mat H, umat Wm, const umat & Hm, const vec & alpha, const vec & beta,
 	unsigned int max_iter = MAX_ITER, double rel_tol = NNMF_REL_TOL, int n_threads = N_THREADS, const int verbose = 1,
 	bool show_warning = SHOW_WARNING, unsigned int inner_max_iter = NNMF_INNER_MAX_ITER,
 	double inner_rel_tol = NNLM_REL_TOL, int method = DEFAULT_METHOD, unsigned int trace = TRACE_STEP);

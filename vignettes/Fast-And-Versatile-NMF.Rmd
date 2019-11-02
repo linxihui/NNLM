@@ -1,24 +1,26 @@
 ---
-title: "NNLM: A package For Fast And Versatile Nonnegative Matrix Factorization"
+title: 'NNLM: A package For Fast And Versatile Nonnegative Matrix Factorization'
 author: "Eric Xihui Lin"
 date: "`r Sys.Date()`"
-header-includes:
-  - \usepackage{amsmath}
 output:
+  pdf_document:
+    toc: yes
   html_document:
-    fig_width: 4.5
     fig_height: 4.5
-    toc: true
+    fig_width: 4.5
+    toc: yes
+header-includes: \usepackage{amsmath}
+bibliography: ref.bib
 vignette: >
   %\VignetteIndexEntry{Fast and versatile NMF}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
-bibliography: ref.bib
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, echo = FALSE, message = FALSE}
 library(knitr);
 opts_chunk$set(cache = TRUE, autodep = TRUE);
+suppressWarnings(RNGversion("3.5.0"));
 ```
 
 
@@ -114,7 +116,7 @@ $$
 
 Since $E-I$ is semi-negative definite, therefore, to ensure the uniqueness and the convergence of the algorithm, one has to ensure that
 $W^TW + \beta_1 I + \beta_2 (E-I)$ is positive definite. Indeed, we force a more stringent constraint that $\beta_1 \ge \beta_2$.
-Similarly, $\alpha_1 \ge \alpha_2$, since the ma.  When the equality is reached, it is the $J_4$ constranint, i.e., row-wise LASSO for $W$ and
+Similarly, $\alpha_1 \ge \alpha_2$, since the ma.  When the equality is reached, it is the $J_4$ constraint, i.e., row-wise LASSO for $W$ and
 column-wise LASSO for $H$.
 
 The following algorithm is used to solved penalized NNLS.
@@ -146,7 +148,7 @@ It can be proved that $\mbox{KL}(A | \hat A) \ge 0$ and equality is reached if a
 
 One explanation of the the $\mbox{KL}$ divergence is to assume that $a_{ij}$ is some count drawn independently as
 $$ a_{ij} \,\sim\, \mbox{Poisson}(\lambda_{ij}). $$
-The correpondent log likelihood is
+The correspondent log likelihood is
 $$ l(\Lambda) = \sum_{i, j} \left(a_{ij}\log\lambda_{ij} - \lambda_{ij}\right) + const.$$
 Maximizing this log likelihood with respect to $\Lambda = \{\lambda_{ij}\}$ is equivalent minimizing $\mbox{KL}$ with respect to $\hat A$.
 Assume that the observed $a_{ij}$ comes from a mixture of independent Poisson distributions with rates
@@ -215,7 +217,7 @@ many of entries should be small enough to be thresholded as 0.
 ## Complexity and convergence speed
 
 One can easily see that both the sequential coordinate descent (SCD) and Lee's multiplictive algorithms using MSE have complexity of
-$\mathcal{O}\left(\left((m+n)k^2 N_i + 2nmK\right)N_o\right)$, while their KL conterparts
+$\mathcal{O}\left(\left((m+n)k^2 N_i + 2nmK\right)N_o\right)$, while their KL counterparts
 have complexity of $\mathcal{O}\left(nmk^2N_iN_o\right)$. Here $N_i$ is the number of inner iterations to solve the non-negative linear model and $N_o$ is
 the number of outer iteration to alternate $W$ and $H$. $N_i x N_o$ is the total number of epochs, i.e., swaps over $W$ and $H$ matrices. Obviously
 algorithm with MSE are faster then the KL based ones (by a factor of $k$) in terms of complexity, and can benefit from multiple
@@ -421,11 +423,11 @@ str(newH)
 
 There are several researches (@zhang2008, @alberto2006) shown the capacity of NMF in blind signal separation
 similar to independent component analysis (ICA).  Here, we aim to focus on the application to
-tumour content deconvolution in the area of bioinformatics, in which one of the signal is known.
+tumor content deconvolution in the area of bioinformatics, in which one of the signal is known.
 
 Microarray is a popular technique for collecting mRNA expression. Indeed,
-a mRNA profile (tumour profile) is typically a mixture of
-cancer specific profile and healthy profile as the collected tumour tissues are 'contaminated' by healthy cells.
+a mRNA profile (tumor profile) is typically a mixture of
+cancer specific profile and healthy profile as the collected tumor tissues are 'contaminated' by healthy cells.
 To exact the pure cancer profile for down-stream analysis, an NMF can be utilized. One can this NMF as
 $$ A \approx W H + W_0 H_1,$$
 where $W$ is unknown cancer profile, and $W_0$ is known healthy profile. The task here is
@@ -469,7 +471,7 @@ $$
 we can expect that $W_1$ and $W_2$ are lung and prostate cancer specific profiles.
 
 
-_ISOpureR_ (@isopure2015) is an R package for tumour content deconvolution based on a
+_ISOpureR_ (@isopure2015) is an R package for tumor content deconvolution based on a
 graphic model introduced in @isopure2013. As argued in the above, NMF can also be used for this purpose.
 
 ```{r isopure-data, fig.align = 'center'}
@@ -488,18 +490,18 @@ load(file.path(path.to.data, 'beer.tumordata.250.transcripts.30.patients.RData')
 # assume k = 3, beer.normaldata is the known healthy profile
 beer.nmf <- nnmf(beer.tumordata, k = 3, init = list(W0 = beer.normaldata));
 
-# compute proportion of tumour content
+# compute proportion of tumor content
 tm.frac.nmf <- with(beer.nmf, colSums(W[,1:3] %*% H[1:3,])/colSums(W %*% H));
 
-# tumour content from ISOpureR using the full dataset
+# tumor content from ISOpureR using the full dataset
 tm.frac.full <- read.delim(file.path(path.to.data, "alphapurities_full_dataset.txt"));
 ```
 
 ```{r isopure-plot, fig.align = 'center', fig.width = 5, fig.height = 5}
 plot(tm.frac.full$alphapurities*100, tm.frac.nmf*100,
 	xlim = c(20, 100), ylim = c(20, 100), col = 'firebrick1',
-	xlab = "% tumour from ISOpureR full data",
-	ylab = "% tumour from NMF partial data");
+	xlab = "% tumor from ISOpureR full data",
+	ylab = "% tumor from NMF partial data");
 abline(a = 0, b = 1, lty = 2)
 ```
 
@@ -779,7 +781,7 @@ round(cor(t(H1), t(deconvol$H[6:7, ])), 2);
 round(cor(W1, deconvol$W[, 8]), 2);
 ```
 
-## Tumour deconvolution
+## tumor deconvolution
 
 
 ## Missing value imputation

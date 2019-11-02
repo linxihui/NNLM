@@ -4,12 +4,12 @@
 \alias{nnmf}
 \title{Non-negative matrix factorization}
 \usage{
-nnmf(A, k = 1L, alpha = rep(0, 3), beta = rep(0, 3), method = c("scd",
-  "lee"), loss = c("mse", "mkl"), init = NULL, mask = NULL,
-  W.norm = -1L, check.k = TRUE, max.iter = 500L, rel.tol = 1e-04,
-  n.threads = 1L, trace = 100/inner.max.iter, verbose = 1L,
-  show.warning = TRUE, inner.max.iter = ifelse("mse" == loss, 50L, 1L),
-  inner.rel.tol = 1e-09)
+nnmf(A, k = 1L, alpha = rep(0, 3), beta = rep(0, 3),
+  method = c("scd", "lee"), loss = c("mse", "mkl"), init = NULL,
+  mask = NULL, W.norm = -1L, check.k = TRUE, max.iter = 500L,
+  rel.tol = 1e-04, n.threads = 1L, trace = 100/inner.max.iter,
+  verbose = 1L, show.warning = TRUE, inner.max.iter = ifelse("mse" ==
+  loss, 50L, 1L), inner.rel.tol = 1e-09)
 }
 \arguments{
 \item{A}{A matrix to be decomposed}
@@ -82,7 +82,7 @@ Non-negative matrix factorization(NMF or NNMF) using sequential coordinate-wise 
 The problem of non-negative matrix factorization is to find \eqn{W, H, W_1, H_1}, such that \cr
 \deqn{A = W H + W_0 H_1 + W_1 H_0 + \varepsilon = [W W_0 W_1] [H' H'_1 H'_0]' + \varepsilon}\cr
 where \eqn{W_0}, \eqn{H_0} are known matrices, which are NULLs in most application case and \eqn{\varepsilon} is noise..
-In tumour content deconvolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
+In tumor content deconvolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
 is desired pure cancer profile. One also set \eqn{H_0} to a row matrix of 1, and thus \eqn{W_1}
 can be treated as common profile among samples. Use \code{init} to specify \eqn{W_0} and \eqn{H_0}.
 
@@ -110,8 +110,8 @@ and
 \deqn{J_3(X) = \sum_{i,j} |x_{ij}| = tr(XE).}
 
 The formal one is usually better for symmetric distribution, while
-the later one is more suitable for skewed distribution, especially for count data as it can be derived from 
-Poisson distributed observation. The penalty function \eqn{J} is a composition of three types of penalties, 
+the later one is more suitable for skewed distribution, especially for count data as it can be derived from
+Poisson distributed observation. The penalty function \eqn{J} is a composition of three types of penalties,
 which aim to minimizing L2 norm, maximizing angles between hidden features (columns of W and rows of H) and
 L1 norm (sparsity).  The parameters \eqn{\alpha}, \eqn{\beta} of length 3 indicates the amount of penalties.
 
@@ -151,9 +151,6 @@ nsclc2.hat.nmf <- with(nsclc2.nmf, W \%*\% H);
 mse.mkl(nsclc[index], nsclc2.hat.nmf[index])
 
 }
-\author{
-Eric Xihui Lin, \email{xihuil.silence@gmail.com}
-}
 \references{
 Franc, V. C., Hlavac, V. C., Navara, M. (2005). Sequential Coordinate-Wise Algorithm for the Non-negative Least Squares Problem.
 Proc. Int'l Conf. Computer Analysis of Images and Patterns. Lecture Notes in Computer Science 3691. p. 407.\cr
@@ -161,10 +158,12 @@ Proc. Int'l Conf. Computer Analysis of Images and Patterns. Lecture Notes in Com
 Lee, Daniel D., and H. Sebastian Seung. 1999. "Learning the Parts of Objects by Non-Negative Matrix Factorization."
 Nature 401: 788-91.\cr
 \cr
-Pascual-Montano, Alberto, J.M. Carazo, Kieko Kochi, Dietrich Lehmann, and Roberto D.Pascual-Marqui. 2006. 
+Pascual-Montano, Alberto, J.M. Carazo, Kieko Kochi, Dietrich Lehmann, and Roberto D.Pascual-Marqui. 2006.
 "Nonsmooth Nonnegative Matrix Factorization (NsNMF)." IEEE Transactions on Pattern Analysis and Machine Intelligence 28 (3): 403-14.\cr
 }
 \seealso{
 \code{\link{nnlm}}, \code{\link{predict.nnmf}}
 }
-
+\author{
+Eric Xihui Lin, \email{xihuil.silence@gmail.com}
+}

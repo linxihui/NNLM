@@ -5,7 +5,7 @@
 #' The problem of non-negative matrix factorization is to find \eqn{W, H, W_1, H_1}, such that \cr
 #' \deqn{A = W H + W_0 H_1 + W_1 H_0 + \varepsilon = [W W_0 W_1] [H' H'_1 H'_0]' + \varepsilon}\cr
 #' where \eqn{W_0}, \eqn{H_0} are known matrices, which are NULLs in most application case and \eqn{\varepsilon} is noise..
-#' In tumour content deconvolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
+#' In tumor content deconvolution, \eqn{W_0} can be thought as known healthy profile, and \eqn{W}
 #' is desired pure cancer profile. One also set \eqn{H_0} to a row matrix of 1, and thus \eqn{W_1}
 #' can be treated as common profile among samples. Use \code{init} to specify \eqn{W_0} and \eqn{H_0}.
 #'
@@ -33,10 +33,10 @@
 #' \deqn{J_3(X) = \sum_{i,j} |x_{ij}| = tr(XE).}
 #'
 #' The formal one is usually better for symmetric distribution, while
-#' the later one is more suitable for skewed distribution, especially for count data as it can be derived from 
-#' Poisson distributed observation. The penalty function \eqn{J} is a composition of three types of penalties, 
+#' the later one is more suitable for skewed distribution, especially for count data as it can be derived from
+#' Poisson distributed observation. The penalty function \eqn{J} is a composition of three types of penalties,
 #' which aim to minimizing L2 norm, maximizing angles between hidden features (columns of W and rows of H) and
-#' L1 norm (sparsity).  The parameters \eqn{\alpha}, \eqn{\beta} of length 3 indicates the amount of penalties. 
+#' L1 norm (sparsity).  The parameters \eqn{\alpha}, \eqn{\beta} of length 3 indicates the amount of penalties.
 #'
 #' When \code{method == 'scd'}, a sequential coordinate-wise descent algorithm is used when solving \eqn{W}
 #' and \eqn{H} alternatively, which are non-negative regression problem. The \code{inner.max.iter} and
@@ -98,7 +98,7 @@
 #' Lee, Daniel D., and H. Sebastian Seung. 1999. "Learning the Parts of Objects by Non-Negative Matrix Factorization."
 #' Nature 401: 788-91.\cr
 #' \cr
-#' Pascual-Montano, Alberto, J.M. Carazo, Kieko Kochi, Dietrich Lehmann, and Roberto D.Pascual-Marqui. 2006. 
+#' Pascual-Montano, Alberto, J.M. Carazo, Kieko Kochi, Dietrich Lehmann, and Roberto D.Pascual-Marqui. 2006.
 #' "Nonsmooth Nonnegative Matrix Factorization (NsNMF)." IEEE Transactions on Pattern Analysis and Machine Intelligence 28 (3): 403-14.\cr
 #'
 #' @author Eric Xihui Lin, \email{xihuil.silence@@gmail.com}
@@ -108,27 +108,27 @@
 #'
 #' # Pattern extraction, meta-gene
 #' set.seed(123);
-#' 
+#'
 #' data(nsclc, package = 'NNLM')
 #' str(nsclc)
 #'
 #' decomp <- nnmf(nsclc[, 1:80], 3, rel.tol = 1e-5);
-#' 
+#'
 #' heatmap(decomp$W, Colv = NA, xlab = 'Meta-gene', ylab = 'Gene', margins = c(2,2),
 #' 	labRow = '', labCol = '', scale = 'column', col = cm.colors(100));
 #' heatmap(decomp$H, Rowv = NA, ylab = 'Meta-gene', xlab = 'Patient', margins = c(2,2),
 #' 	labRow = '', labCol = '', scale = 'row', col = cm.colors(100));
-#' 
+#'
 #' # missing value imputation
 #' set.seed(123);
 #' nsclc2 <- nsclc;
 #' index <- sample(length(nsclc2), length(nsclc2)*0.3);
 #' nsclc2[index] <- NA;
-#' 
+#'
 #' # impute using NMF
 #' system.time(nsclc2.nmf <- nnmf(nsclc2, 2));
 #' nsclc2.hat.nmf <- with(nsclc2.nmf, W %*% H);
-#' 
+#'
 #' mse.mkl(nsclc[index], nsclc2.hat.nmf[index])
 #'
 #' @export
@@ -174,13 +174,12 @@ nnmf <- function(
 		}
 
 	run.time <- system.time(
-		out <- .Call('NNLM_nnmf', A, as.integer(k),
+		out <- c_nnmf(A, as.integer(k),
 			init.mask$Wi, init.mask$Hi, init.mask$Wm, init.mask$Hm,
 			alpha, beta, as.integer(max.iter), as.double(rel.tol),
 			as.integer(n.threads), as.integer(verbose), as.logical(show.warning),
 			as.integer(inner.max.iter), as.double(inner.rel.tol), as.integer(method.code),
-			as.integer(trace), PACKAGE = 'NNLM'
-			)
+			as.integer(trace))
 		);
 	names(out) <- c('W', 'H', 'mse', 'mkl', 'target.loss', 'average.epochs', 'n.iteration');
 	out$mse <- as.vector(out$mse);

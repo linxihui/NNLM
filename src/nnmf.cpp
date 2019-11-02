@@ -1,9 +1,9 @@
 #include "nnlm.h"
 
 //[[Rcpp::export]]
-Rcpp::List nnmf(const mat & A, const unsigned int k, mat W, mat H, umat Wm, umat Hm,
-	const vec & alpha, const vec & beta, const unsigned int max_iter, const double rel_tol, 
-	const int n_threads, const int verbose, const bool show_warning, const unsigned int inner_max_iter, 
+Rcpp::List c_nnmf(const arma::mat & A, const unsigned int k, arma::mat W, arma::mat H, arma::umat Wm, arma::umat Hm,
+	const arma::vec & alpha, const arma::vec & beta, const unsigned int max_iter, const double rel_tol,
+	const int n_threads, const int verbose, const bool show_warning, const unsigned int inner_max_iter,
 	const double inner_rel_tol, const int method, unsigned int trace)
 {
 	/******************************************************************************************************
@@ -33,7 +33,7 @@ Rcpp::List nnmf(const mat & A, const unsigned int k, mat W, mat H, umat Wm, umat
 	 * 	trace          : A positive integer, error will be checked very 'trace' iterations. Computing WH can be very expansive,
 	 * 	               : so one may not want to check error A-WH every single iteration
 	 * Return:
-	 * 	A list (Rcpp::List) of 
+	 * 	A list (Rcpp::List) of
 	 * 		W, H          : resulting W and H matrices
 	 * 		mse_error     : a vector of mean square error (divided by number of non-missings)
 	 * 		mkl_error     : a vector (length = number of iterations) of mean KL-distance
@@ -63,7 +63,7 @@ Rcpp::List nnmf(const mat & A, const unsigned int k, mat W, mat H, umat Wm, umat
 	double terr_last = 1e99;
 	uvec non_missing;
 	bool any_missing = !A.is_finite();
-	if (any_missing) 
+	if (any_missing)
 	{
 		non_missing = find_finite(A);
 		N_non_missing = non_missing.n_elem;
@@ -106,7 +106,7 @@ Rcpp::List nnmf(const mat & A, const unsigned int k, mat W, mat H, umat Wm, umat
 	int total_raw_iter = 0;
 	unsigned int i = 0;
 	unsigned int i_e = 0; // index for error checking
-	for(; i < max_iter && std::abs(rel_err) > rel_tol; i++) 
+	for(; i < max_iter && std::abs(rel_err) > rel_tol; i++)
 	{
 		Rcpp::checkUserInterrupt();
 		prgrss.increment();

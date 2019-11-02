@@ -1,12 +1,12 @@
 #include "nnlm.h"
 
 //[[Rcpp::export]]
-Rcpp::List nnlm(const mat & x, const mat & y, const vec & alpha, const umat & mask, const mat & beta0,
+Rcpp::List c_nnlm(const arma::mat & x, const arma::mat & y, const arma::vec & alpha, const arma::umat & mask, const arma::mat & beta0,
 	unsigned int max_iter, double rel_tol, int n_threads, int method)
 {
 	/******************************************************************************************************
 	 *                                    Non-Negative Linear Model
-	 *                                    -------------------------                 
+	 *                                    -------------------------
 	 * Description:
 	 * 		solve y = x beta
 	 * Arguments:

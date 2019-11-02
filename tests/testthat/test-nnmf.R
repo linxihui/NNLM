@@ -1,6 +1,7 @@
 context("Test non-negative matrix factorization.");
 
 test_that("Test NMF using nnls", {
+  suppressWarnings(RNGversion("3.5.0"));
 	n <- 50; m <- 10;
 	k <- 3; k1 <- 2; k2 <- 1;
 
@@ -53,7 +54,7 @@ test_that("Test NMF using nnls", {
 	print(A.nnmf2)
 	W.new <- predict(A.nnmf2, A[1:4, ], which = 'W')
 
-	expect_warning(nnmf(A, 2, alpha = 0.1, beta = 0, max.iter = 10L), 
+	expect_warning(nnmf(A, 2, alpha = 0.1, beta = 0, max.iter = 10L),
 		'Target tolerance not reached. Try a larger max.iter.');
 
 	expect_error(nnmf(A, 20));

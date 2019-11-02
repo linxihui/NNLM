@@ -21,4 +21,3 @@ A vector of c(MSE, MKL)
 \description{
 Compute mean square error(MSE) and mean kL divergence (MKL)
 }
-

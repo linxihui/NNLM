@@ -43,4 +43,3 @@ pred <- predict(r, newx, 'H')
 \seealso{
 \code{\link{nnmf}}, \code{\link{nnlm}}
 }
-
