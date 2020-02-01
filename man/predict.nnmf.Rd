@@ -5,8 +5,14 @@
 \alias{print.nnmf}
 \title{Methods for nnmf object returned by \code{nnmf}}
 \usage{
-\method{predict}{nnmf}(object, newdata, which = c("A", "W", "H"),
-  method = object$options$method, loss = object$options$loss, ...)
+\method{predict}{nnmf}(
+  object,
+  newdata,
+  which = c("A", "W", "H"),
+  method = object$options$method,
+  loss = object$options$loss,
+  ...
+)
 
 \method{print}{nnmf}(x, ...)
 }

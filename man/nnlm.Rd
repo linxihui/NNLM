@@ -4,10 +4,20 @@
 \alias{nnlm}
 \title{Non-negative linear model/regression (NNLM)}
 \usage{
-nnlm(x, y, alpha = rep(0, 3), method = c("scd", "lee"),
-  loss = c("mse", "mkl"), init = NULL, mask = NULL, check.x = TRUE,
-  max.iter = 10000L, rel.tol = 1e-12, n.threads = 1L,
-  show.warning = TRUE)
+nnlm(
+  x,
+  y,
+  alpha = rep(0, 3),
+  method = c("scd", "lee"),
+  loss = c("mse", "mkl"),
+  init = NULL,
+  mask = NULL,
+  check.x = TRUE,
+  max.iter = 10000L,
+  rel.tol = 1e-12,
+  n.threads = 1L,
+  show.warning = TRUE
+)
 }
 \arguments{
 \item{x}{Design matrix}

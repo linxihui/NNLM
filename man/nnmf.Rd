@@ -4,12 +4,26 @@
 \alias{nnmf}
 \title{Non-negative matrix factorization}
 \usage{
-nnmf(A, k = 1L, alpha = rep(0, 3), beta = rep(0, 3),
-  method = c("scd", "lee"), loss = c("mse", "mkl"), init = NULL,
-  mask = NULL, W.norm = -1L, check.k = TRUE, max.iter = 500L,
-  rel.tol = 1e-04, n.threads = 1L, trace = 100/inner.max.iter,
-  verbose = 1L, show.warning = TRUE, inner.max.iter = ifelse("mse" ==
-  loss, 50L, 1L), inner.rel.tol = 1e-09)
+nnmf(
+  A,
+  k = 1L,
+  alpha = rep(0, 3),
+  beta = rep(0, 3),
+  method = c("scd", "lee"),
+  loss = c("mse", "mkl"),
+  init = NULL,
+  mask = NULL,
+  W.norm = -1L,
+  check.k = TRUE,
+  max.iter = 500L,
+  rel.tol = 1e-04,
+  n.threads = 1L,
+  trace = 100/inner.max.iter,
+  verbose = 1L,
+  show.warning = TRUE,
+  inner.max.iter = ifelse("mse" == loss, 50L, 1L),
+  inner.rel.tol = 1e-09
+)
 }
 \arguments{
 \item{A}{A matrix to be decomposed}

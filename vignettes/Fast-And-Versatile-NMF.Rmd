@@ -14,7 +14,7 @@ bibliography: ref.bib
 vignette: >
   %\VignetteIndexEntry{Fast and versatile NMF}
   %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, echo = FALSE, message = FALSE}
@@ -477,7 +477,7 @@ graphic model introduced in @isopure2013. As argued in the above, NMF can also b
 ```{r isopure-data, fig.align = 'center'}
 set.seed(123);
 if (!require(ISOpureR)) {
-	install.packages('ISOpureR', repos = "http://cran.stat.sfu.ca/");
+	install.packages('ISOpureR');
 	library(ISOpureR);
 	}
 
@@ -548,7 +548,7 @@ nsclc2.hat.nmf <- with(nsclc2.nmf, W %*% H);
 ```{r missing-mic, results = 'hold', fig.show = 'hold', message = FALSE}
 # multivariate imputation by chained equations (MICE)
 if(!require(mice)) {
-	install.packages('mice', repos = "http://cran.stat.sfu.ca/");
+	install.packages('mice');
 	library(mice);
 	}
 
@@ -560,7 +560,7 @@ nsclc2.hat.mice <- exp(as.matrix(complete(nsclc2.mice)));
 ```{r missing-missforest, results = 'hold', fig.show = 'hold', message = FALSE}
 # imputation using random forest
 if(!require(missForest)) {
-	install.packages('missForest', repos = "http://cran.stat.sfu.ca/");
+	install.packages('missForest');
 	library(missForest);
 	}
 

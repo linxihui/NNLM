@@ -1,4 +1,8 @@
-NNLM-0.4.: 2019-06-29
+NNLM-0.4.4: 2020-02-01
+======================
+- fixed according to CRAN request.
+
+NNLM-0.4.3: 2019-06-29
 ======================
 - fixed testing error
 - fixed cpp flag for openmp

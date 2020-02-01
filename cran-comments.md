@@ -1,30 +1,20 @@
 ## Test environments
-* local Ubuntu 18.04  install, R 3.6.0
+* local Ubuntu 18.10  install, R 3.6.0
 * win-builder (devel and release)
+* rhub Windows Server 2008 R2 SP1, R-devel, 32/64 bit
+* rhub Ubuntu Linux 16.04 LTS, R-release, GCC
+* rhub Fedora Linux, R-devel, clang, gfortran 
 
 ## R CMD check results
 There were no ERRORs or WARNINGs.
 
 There was 1 NOTE:
 
-* checking CRAN incoming feasibility ... NOTE
-Maintainer: 'Xihui Lin <ericxihuilin@outlook.com>'
-
-New submission
-
-Package was archived on CRAN
-
-Possibly mis-spelled words in DESCRIPTION:
-  Kullback (6:84)
-  Leibler (6:93)
-  NMF (6:44)
-  NNLM (4:64)
-  designable (8:5)
-  regularizations (8:55)
-  
-CRAN repository db overrides:
-  X-CRAN-Comment: Archived on 2019-04-22 as check errors were not
-    corrected despite reminders.
+* checking installed package size ... NOTE
+  installed size is  6.7Mb
+  sub-directories of 1Mb or more:
+    doc    1.7Mb
+    libs   4.7Mb
 
 
 ## Downstream dependencies
