@@ -196,9 +196,9 @@ nnmf <- function(
 
 	if (W.norm > 0) {
 		if (is.finite(W.norm)) {
-			W.scale <- sapply(out$W, function(x) sum(x^W.norm)^(1./W.norm));
+			W.scale <- apply(out$W, 2, function(x) sum(x^W.norm)^(1./W.norm));
 		} else {
-			W.scale <- sapply(out$W, max);
+			W.scale <- apply(out$W, 2, max);
 			}
 		out$W <- out$W %*% diag(1./W.scale);
 		out$H <- diag(W.scale) %*% out$H
