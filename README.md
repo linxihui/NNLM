@@ -9,12 +9,14 @@ This is a package for Nonnegative Linear Models (NNLM). It implements fast seque
 # Install
 
 ```r
-# get a release version from CRAN
-install.packages('NNLM')
-
-# or a dev-version
 library(devtools)
 install_github('linxihui/NNLM')
+
+
+# get a release version from CRAN
+# NOT LONGER available
+# install.packages('NNLM')
+
 ```
 
 # Why another NMF package?
@@ -32,4 +34,4 @@ deconvolution, pathway or subnetwork guided NMF for more biological meaningful d
 (Not a built-in function yet and will be in next version shortly, but one can do it easily).
 6. Parallel for one single NMF through openMP.
 
-For more details, one can read the [vignette](https://cran.r-project.org/web/packages/NNLM/vignettes/Fast-And-Versatile-NMF.pdf) on CRAN.
+For more details, one can read the [vignette](https://rdrr.io/cran/NNLM/f/inst/doc/Fast-And-Versatile-NMF.pdf).
