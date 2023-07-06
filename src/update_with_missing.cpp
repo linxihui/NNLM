@@ -99,6 +99,8 @@ int update_with_missing(mat & H, const mat & Wt, const mat & A, const umat & mas
 				WtW.diag() += beta(0) - beta(1);
 			if (beta(1) != 0)
 				WtW += beta(1);
+
+			WtW.diag() += TINY_NUM; // for stability: avoid divided by 0 in scd_ls, scd_kl
 		}
 
 		int iter = 0;
